@@ -1,5 +1,216 @@
-type ExampleEntity @entity {
+
+type StakingPool @entity {
   id: ID!
-  block: Bytes!
-  count: BigInt!
+  owner: String!
+  stakers: [Staker!]! @derivedFrom(field: "select_staking_pool")
+}
+
+type Staker @entity {
+  id: ID!
+  staker_id: String!,
+  select_staking_pool_id: String!,
+  select_staking_pool: StakingPool,
+  shares: BigInt!,
+
+  bonding_consumer_chain_count: Int!
+  bonding_consumer_chains: [StakerAndConsumerChain!] @derivedFrom(field: "staker") ,
+  max_bonding_unlock_period: BigInt!,
+  unbonding_unlock_time: BigInt!,
+}
+
+type Validator @entity {
+  id: ID!
+  total_stake_amount: BigInt!
+  total_share_balance: BigInt!
+  delegator_count:Int!
+  delegators: [Delegator!]! @derivedFrom(field: "select_validator")
+  unclaim_rewards: String!
+  staker: Staker
+}
+
+type Delegator @entity {
+	id: ID!
+  select_validator: Validator
+  total_stake_amount: BigInt!
+  share_balance: BigInt!
+  unclaim_rewards: String!
+}
+
+type ConsumerChain @entity {
+  id: ID!
+  consumer_chain_id: String!,
+  unbond_period: BigInt!,
+  website: String!,
+  governance: String!,
+  bonding_staker_ids: [String!]!,
+  treasury: String!,
+  status: String!,
+  pos_account_id: String!,
+  blacklist: [String!]!,
+  register_fee: BigInt!,
+  stakers: [StakerAndConsumerChain!] @derivedFrom(field: "consumer_chain")
+}
+
+type StakerAndConsumerChain @entity {
+  id: ID!
+  staker: Staker!
+  consumer_chain: ConsumerChain!
+}
+
+type Slash @entity {
+  id: ID!
+  consumer_chain_id: String!,
+  slash_items: String!,
+  evidence_sha256_hash: String!
+}
+
+type Summary @entity {
+  id: ID!
+  chain_count: Int!
+  validator_count: Int!
+}
+
+enum ActionType {
+  # staker
+  stake_action,
+  increase_stake_action,
+  decrease_stake_action,
+
+  # validator
+  deploy_action,
+  stake_action,
+  increase_stake_action,
+  decrease_stake_action,
+
+  restake_action,
+  unrestake_action,
+  change_key_action,
+
+  # delegator
+  delegate_action,
+  increase_delegation_action,
+  decrease_deleation_action,
+  undelegate_action,
+
+  # validator & delegator
+  withdraw_action,
+  receive_reward_action,
+  claim_reward_action,
+  
+}
+
+type UserAction @entity {
+  id: ID!
+
+  predecessor_id: String!
+	signer_id: String!
+	user_id: String!
+	timestamp: BigInt!
+	timestamp_plus_log_index: BigInt!
+	receipt_id: String!
+
+  action_type: ActionType!
+  
+
+  # validator
+  deploy_action: DeployAction,
+  stake_action: StakeAction,
+  increase_stake_action: IncreaseStakeAction ,
+  decrease_stake_action: DecreaseStakeAction,
+
+  restake_action: RestakeAction,
+  unrestake_action: UnrestakeAction,
+  change_key_action: ChangeKeyAction,
+
+  # delegator
+  delegate_action: DelegateAction
+  increase_delegation_action: IncreaseDelegationAction,
+  decrease_deleation_action: DecreaseDelegationAction,
+  undelegate_action: UndelegateAction,
+
+  # validator & delegator
+  withdraw_action: WithdrawAction,
+  receive_reward_action: ReceiveRewardAction,
+  claim_reward_action: ClaimRewardAction,
+
+}
+
+type DeployAction @entity {
+  id: ID!
+  escrow_account_id: String!
+  deploy_fee: BigInt!
+}
+
+type StakeAction @entity {
+  id: ID!
+  select_pool: String!
+  stake_amount: BigInt!
+}
+
+type IncreaseStakeAction @entity {
+  id: ID!
+  increase_amount: BigInt!
+}
+
+type DecreaseStakeAction @entity {
+  id: ID!
+  decrease_amount: BigInt!
+  withdraw_voucher_id: String!
+}
+
+type RestakeAction @entity {
+  id: ID!
+  consumer_chain_id: String!
+  key: String!
+}
+
+type UnrestakeAction @entity {
+  id: ID!
+  consumer_chain_id: String!
+}
+
+type ChangeKeyAction @entity {
+  id: ID!
+  consumer_chain_id: String!
+  key: String!
+}
+
+type DelegateAction @entity {
+  id: ID!
+  validator: String!
+  delegation_amount: BigInt!
+}
+
+type IncreaseDelegationAction @entity {
+  id: ID!
+  increase_amount: BigInt!
+}
+
+type DecreaseDelegationAction @entity {
+  id: ID!
+  decrease_amount: BigInt!
+  withdraw_voucher_id: String!
+}
+
+type UndelegateAction @entity {
+  id: ID!
+  withdraw_voucher_id: String!
+}
+
+type WithdrawAction @entity{
+  id: ID!
+  withdraw_voucher_id: String!
+  amount: BigInt!
+}
+
+type ReceiveRewardAction @entity {
+  id: ID!
+  # json {"token_id": 123456789}
+  reward_info: String!
+}
+
+type ClaimRewardAction @entity {
+  id: ID!
+  token_id: String!
+  amount: BigInt
 }
