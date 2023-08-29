@@ -3,11 +3,14 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: near
-    name: Contract
+    name: receipts
     network: near-testnet
     source:
-      account: "a.testnet"
-      startBlock: 132937370
+      accounts:
+        suffixes:
+          - "contract3.lpos-market.testnet"
+          - "contract3.restaking-base.testnet"
+      startBlock: 135579806
     mapping:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
@@ -15,4 +18,4 @@ dataSources:
         - ExampleEntity
       receiptHandlers:
         - handler: handleReceipt
-      file: ./src/contract.ts
+      file: ./src/mapping.ts
