@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { DelegatorReward, ValidatorReward } from "../../generated/schema";
+import { Delegator, DelegatorReward, ValidatorReward } from "../../generated/schema";
 
 export class RewardHelper {
 

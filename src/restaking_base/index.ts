@@ -1,14 +1,16 @@
-import { near } from "@graphprotocol/graph-ts";
+import { log, near } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
 import { StakerHelper } from "./staker";
 import { StakingPoolHelper } from "./staking_pool";
 import { UserActionHelp } from "../user_action";
 import { ConsumerChainHelper } from "./consumer_chain";
-import { StakerAndConsumerChain } from "../../generated/schema";
+import { StakerAndConsumerChain, WithdrawAction } from "../../generated/schema";
 import { StakerAndConsumerChainHelper } from "./staker_and_consumer_chain";
+import { WithdrawalHelper } from "./withdrawal";
+import { SummaryHelper } from "../summary";
 
 
-export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
 	let objInData = (<JSON.Obj>eventObj.getArr("data")!.valueOf()[0])
 	let event = eventObj.get("event")!.toString();
 
@@ -21,9 +23,9 @@ export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.Recei
 	} else if (event == "staker_increase_stake") {
 		handleIncreaseStakeEvent(objInData, receipt, logIndex);
 	} else if (event == "staker_decrease_stake") {
-		handleDecreaseStakeEvent(objInData, receipt, logIndex);
+		handleDecreaseStakeEvent(objInData, receipt, logIndex, version);
 	} else if (event == "staker_unstake") {
-		handleUnstakeEvent(objInData, receipt, logIndex);
+		handleUnstakeEvent(objInData, receipt, logIndex, version);
 	} else if (event =="staker_bond") {
 		handleBondEvent(objInData, receipt, logIndex);
 	} else if (event =="staker_unbond") {
@@ -38,6 +40,8 @@ export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.Recei
 		handleDeregisterConsumerChainEvent(objInData, receipt, logIndex);
 	} else if (event == "request_slash") {
 		handleRequestSlashEvent(objInData, receipt, logIndex);
+	} else if (event == "withdraw") {
+		handleWithdrawEvent(objInData, receipt, logIndex)
 	}
 }
 
@@ -52,31 +56,51 @@ function handlePingEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 	// 	BigInt.fromString(data.getString("new_total_staked_balance")!.valueOf())
 	// )
 	// StakerHelper.upda
+	StakingPoolHelper.updateByPing(data)
 	UserActionHelp.new_ping_action(data, receipt, logIndex)
+	SummaryHelper.updateTotalStake()
 }
 
 function handleStakerStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
 	StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
 	UserActionHelp.new_staker_stake_action(data, receipt, logIndex)
+	let summary = SummaryHelper.updateTotalStake()
+	summary.staker_count += 1
+	summary.save()
 }
 
 function handleIncreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
 	StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
 	UserActionHelp.new_staker_increase_stake_action(data, receipt, logIndex)
+	SummaryHelper.updateTotalStake()
 }
 
-function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
-	StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
-	UserActionHelp.new_staker_decrease_stake_action(data, receipt, logIndex)
+	let staker = StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
+	let user_action = UserActionHelp.new_staker_decrease_stake_action(data, receipt, logIndex)
+	WithdrawalHelper.newByPendingWithdrawalData(
+		data.getObj("pending_withdrawal")!,
+		staker.staker_id,
+		user_action.id
+	)
+	SummaryHelper.updateTotalStake()
 }
 
-function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
-	StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
-	UserActionHelp.new_staker_unstake_action(data, receipt, logIndex)
+	let staker = StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
+	let user_action = UserActionHelp.new_staker_unstake_action(data, receipt, logIndex)
+	WithdrawalHelper.newByPendingWithdrawalData(
+		data.getObj("pending_withdrawal")!,
+		staker.staker_id,
+		user_action.id
+	)
+	let summary = SummaryHelper.updateTotalStake()
+	summary.staker_count -=1
+	summary.save()
 }
 
 function handleBondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -109,6 +133,9 @@ function handleUnbondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log
 function handleRegisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!)
 	UserActionHelp.new_register_consumer_chain_action(data, receipt, logIndex)
+	let summary = SummaryHelper.getOrNew()
+	summary.chain_count +=1
+	summary.save()
 }
 
 function handleUpdateConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -119,8 +146,21 @@ function handleUpdateConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWit
 function handleDeregisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!)
 	UserActionHelp.new_deregister_consumer_chain_action(data, receipt, logIndex)
+	let summary = SummaryHelper.getOrNew()
+	summary.chain_count -=1
+	summary.save()
 }
 
 function handleRequestSlashEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 
+}
+
+function handleWithdrawEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+
+	let withdrawal_certificate = data.getString("withdraw_certificate")?
+	data.getString("withdraw_certificate")!.valueOf():
+	data.getString("withdrawal_certificate")!.valueOf()
+	
+	let user_action = UserActionHelp.new_withdraw_action(data, receipt, logIndex)
+	WithdrawalHelper.withdraw(withdrawal_certificate, user_action.id)
 }

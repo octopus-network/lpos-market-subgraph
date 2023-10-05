@@ -20,14 +20,7 @@ export class ConsumerChainHelper {
 		consumer_chain.status = consumer_chain_info.getString("status")!.valueOf()
 		consumer_chain.pos_account_id = consumer_chain_info.getString("pos_account_id")!.valueOf()
 		consumer_chain.register_fee = BigInt.fromString(consumer_chain_info.getString("register_fee")!.valueOf())
-		consumer_chain.is_registered_in_lposmarket = false
 		consumer_chain.save()
 		return consumer_chain
-	}
-
-	static register_in_lpos_market(consumer_chain_id: string): void {
-		let consumer_chain = ConsumerChain.load(consumer_chain_id)!
-		consumer_chain.is_registered_in_lposmarket = true
-		consumer_chain.save()
 	}
 }

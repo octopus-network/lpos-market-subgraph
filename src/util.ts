@@ -1,7 +1,6 @@
 import { BigInt, near } from "@graphprotocol/graph-ts";
 import { UserAction } from "../generated/schema";
-import { action_types } from "./user_action";
-// import { ActionId, action_types } from "./types";
+import { ActionId, action_types } from "./user_action";
 
 
 export function convertStringToBigInt(U128: string): BigInt {

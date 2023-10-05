@@ -1,6 +1,7 @@
 
 type StakingPool @entity {
   id: ID!
+  pool_id: String!
   total_share_balance: BigInt!,
   total_staked_balance: BigInt!,
   stakers: [Staker!] @derivedFrom(field: "select_staking_pool")
@@ -19,14 +20,25 @@ type Staker @entity {
   unbonding_unlock_time: BigInt!,
 }
 
+enum ValidatorStatus {
+  Deployed,
+  Staking,
+  Unstaking,
+  ToBeDestroyed
+  Destroyed
+}
+
 type Validator @entity {
   id: ID!
+  validator_id: String!
   escrow_id: String!
   total_staked_balance: BigInt!
   total_share_balance: BigInt!
   share_balance: BigInt!
   staked_balance: BigInt!
   staker: Staker
+  status: ValidatorStatus!
+  unstake_withdraw_certificate: Withdrawal
 
   delegator_count:Int!
   delegator_list_string: String!
@@ -44,6 +56,7 @@ type ValidatorReward @entity {
 
 type Delegator @entity {
 	id: ID!
+  delegator_id: String!
   select_validator: Validator
   share_balance: BigInt!
   staked_balance: BigInt!
@@ -67,7 +80,6 @@ type ConsumerChain @entity {
   status: String!,
   pos_account_id: String!,
   register_fee: BigInt!,
-  is_registered_in_lposmarket: Boolean!
   stakers: [StakerAndConsumerChain!] @derivedFrom(field: "consumer_chain")
 }
 
@@ -95,7 +107,11 @@ type Slash @entity {
 type Summary @entity {
   id: ID!
   chain_count: Int!
+  staker_count: Int!
   validator_count: Int!
+  delegator_count: Int!
+  total_staked_near: BigInt!
+  staking_pool_list: String!
 }
 
 enum WithdrawalStatus {
@@ -114,6 +130,7 @@ type Withdrawal @entity {
   unlock_epoch: BigInt!
   unlock_time: BigInt!
   beneficiary: String!
+  validator_id: String
 
   create_action: UserAction!
   withdraw_action: WithdrawAction
@@ -142,7 +159,10 @@ enum ActionType {
   stake_action,
   increase_stake_action,
   decrease_stake_action,
+  unstake_action,
 
+  withdraw_unstake_action,
+  destroy_action,
   validator_ping_action,
 
   # cc gov
@@ -154,8 +174,9 @@ enum ActionType {
   # delegator
   delegate_action,
   increase_delegation_action,
-  decrease_deleation_action,
+  decrease_delegation_action,
   undelegate_action,
+  undelegate_in_unstake_action
 
   # validator & delegator
   withdraw_action,
@@ -164,6 +185,7 @@ enum ActionType {
 
   delegator_claim_reward_action,
   validator_claim_reward_action,
+
 
   #registry 
   register_consumer_chain_in_lpos_market_action,
@@ -179,6 +201,7 @@ type UserAction @entity {
 	timestamp: BigInt!
 	timestamp_plus_log_index: BigInt!
 	receipt_id: String!
+  block_height: BigInt!
 
   action_type: ActionType!
 
@@ -202,26 +225,30 @@ type UserAction @entity {
   request_slash_action: RequestSlashAction,
 
   # validator
-  deploy_action: DeployAction,
-  stake_action: StakeAction,
-  increase_stake_action: IncreaseStakeAction ,
-  decrease_stake_action: DecreaseStakeAction,
+  deploy_action: DeployAction
+  stake_action: StakeAction
+  increase_stake_action: IncreaseStakeAction
+  decrease_stake_action: DecreaseStakeAction
+  unstake_action: UnstakeAction
+  destroy_action: DestroyAction
 
 
-  restake_action: RestakeAction,
-  unrestake_action: UnrestakeAction,
-  change_key_action: ChangeKeyAction,
+  restake_action: RestakeAction
+  unrestake_action: UnrestakeAction
+  change_key_action: ChangeKeyAction
 
-  validator_ping_action: ValidatorPingAction,
+  validator_ping_action: ValidatorPingAction
 
   # delegator
   delegate_action: DelegateAction
-  increase_delegation_action: IncreaseDelegationAction,
-  decrease_deleation_action: DecreaseDelegationAction,
-  undelegate_action: UndelegateAction,
+  increase_delegation_action: IncreaseDelegationAction
+  decrease_delegation_action: DecreaseDelegationAction
+  undelegate_action: UndelegateAction
+  undelegate_in_unstake_action: UndelegateInUnstakeAction
 
   # validator & delegator
   withdraw_action: WithdrawAction,
+  withdraw_unstake_action: WithdrawUnstakeAction,
 
   delegator_receive_reward_action: DelegatorReceiveRewardAction,
   validator_receive_reward_action: ValidatorReceiveRewardAction,
@@ -238,37 +265,37 @@ type UserAction @entity {
 type PingAction @entity {
   id: ID!
   pool_id: String!
-  new_total_staked_balance: BigInt!
+  balance: BigInt!
 }
 
 type StakerStakeAction @entity {
   id: ID!
-  select_pool: String!
-  stake_amount: BigInt!
-	increase_shares: BigInt!,
+  pool_id: String!
+  amount: BigInt!
+	shares: BigInt!,
 	sequence: BigInt!
 }
 
 type StakerIncreaseStakeAction @entity {
   id: ID!
-  increase_stake_amount: BigInt!
-	increase_shares: BigInt!,
+  amount: BigInt!
+	shares: BigInt!,
 	sequence: BigInt!
 }
 
 type StakerDecreaseStakeAction @entity {
   id: ID!
-  decrease_stake_amount: BigInt!,
-	decrease_shares: BigInt!,
-	withdraw_certificate: BigInt!,
+  amount: BigInt!,
+	shares: BigInt!,
+	withdrawal: Withdrawal!,
 	sequence: BigInt!,
 }
 
 type StakerUnstakeAction @entity {
   id: ID!
-  decrease_stake_amount: BigInt!,
-	decrease_shares: BigInt!,
-	withdraw_certificate: BigInt!,
+  amount: BigInt!,
+	shares: BigInt!,
+	withdrawal: Withdrawal!,
 	sequence: BigInt!
 }
 
@@ -296,12 +323,12 @@ type StakerChangeKeyAction @entity {
 type ValidatorPingAction @entity {
   id: ID!
   validator_id: String!,
-  new_total_staked_balance: BigInt!
+  balance: BigInt!
 }
 
 type RegisterConsumerChainAction @entity {
   id: ID!
-  consumer_chain_register_param: String!
+  param: String!
 }
 
 
@@ -313,7 +340,7 @@ type RegisterConsumerChainInLposMarketAction @entity {
 
 type UpdateConsumerChainAction @entity {
   id: ID!
-  consumer_chain_update_param: String!
+  param: String!
 }
 
 type DeregisterConsumerChainAction @entity {
@@ -337,22 +364,41 @@ type DeployAction @entity {
 
 type StakeAction @entity {
   id: ID!
-  select_pool_id: String!
-  stake_amount: BigInt!
-  increase_shares: BigInt!
+  pool_id: String!
+  amount: BigInt!
+  shares: BigInt!
+  validator_id: String!
 }
 
 type IncreaseStakeAction @entity {
   id: ID!
-  increase_stake_amount: BigInt! 
-  increase_shares: BigInt!
+  amount: BigInt! 
+  shares: BigInt!
+  validator_id: String!
 }
 
 type DecreaseStakeAction @entity {
   id: ID!
-  decrease_stake_amount: BigInt!
-  decrease_shares: BigInt!
+  amount: BigInt!
+  shares: BigInt!
+  sequence: BigInt!
+  staker_decrease_stake_action: StakerDecreaseStakeAction!
+  withdrawal: Withdrawal!
+  validator_id: String!
+}
 
+type UnstakeAction @entity {
+  id: ID!
+  withdrawal: Withdrawal!
+  sequence: BigInt!
+  staker_unstake_action: StakerUnstakeAction
+  validator_id: String!
+}
+
+type DestroyAction @entity {
+  id: ID!
+  amount: BigInt!
+  validator_id: String!
 }
 
 type RestakeAction @entity {
@@ -374,64 +420,85 @@ type ChangeKeyAction @entity {
 
 type DelegateAction @entity {
   id: ID!
+  amount: BigInt!
+  shares: BigInt!
   validator_id: String!
-  delegate_amount: BigInt!
-  increase_shares: BigInt!
 }
 
 type IncreaseDelegationAction @entity {
   id: ID!
-  increase_delegation_amount: BigInt!
-  increase_shares: BigInt!
+  amount: BigInt!
+  shares: BigInt!
+  validator_id: String!
 }
 
 type DecreaseDelegationAction @entity {
   id: ID!
-  decrease_delegation_amount: BigInt!
-  decrease_shares: BigInt!
+  amount: BigInt!
+  shares: BigInt!
   sequence: BigInt!
+  validator_id: String!
   staker_decrease_stake_action: StakerDecreaseStakeAction!
+  withdrawal: Withdrawal!
 }
 
 type UndelegateAction @entity {
   id: ID!
-  decrease_delegation_amount: BigInt!
-  decrease_shares: BigInt!
+  amount: BigInt!
+  shares: BigInt!
   sequence: BigInt!
+  validator_id: String!
   staker_decrease_stake_action: StakerDecreaseStakeAction!
+  withdrawal: Withdrawal!
+}
+
+type UndelegateInUnstakeAction @entity {
+  id: ID!
+  amount: BigInt!
+  shares: BigInt!
+  validator_id: String!
 }
 
 type WithdrawAction @entity{
   id: ID!
-  withdraw_certificate_id: String!
+  withdrawal_certificate: String!
   amount: BigInt!
   withdrawal: Withdrawal!
 }
 
+type WithdrawUnstakeAction @entity {
+  id: ID!
+  withdrawal_certificate: String!
+  amount: BigInt!
+  withdrawal: Withdrawal!
+  validator_id: String!
+}
+
 type DelegatorReceiveRewardAction @entity {
   id: ID!
-  reward_token_id: String!
-  reward_token_amount: BigInt!
+  token_id: String!
+  amount: BigInt!
   receiver: String!
+  validator_id: String!
 }
 
 type ValidatorReceiveRewardAction @entity {
   id: ID!
-  reward_token_id: String!
-  reward_token_amount: BigInt!
+  token_id: String!
+  amount: BigInt!
   receiver: String!
 }
 
 type DelegatorClaimRewardAction @entity {
   id: ID!
-  reward_token_id: String!
-  reward_token_amount: BigInt
+  token_id: String!
+  amount: BigInt
   receiver: String!
 }
 
 type ValidatorClaimRewardAction @entity {
   id: ID!
-  reward_token_id: String!
-  reward_token_amount: BigInt
+  token_id: String!
+  amount: BigInt
   receiver: String!
 }

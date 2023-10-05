@@ -8,9 +8,9 @@ dataSources:
     source:
       accounts:
         suffixes:
-          - "contract3.lpos-market.testnet"
-          - "contract3.restaking-base.testnet"
-      startBlock: 135579806
+          - "contract-2.lpos-market.testnet"
+          - "contract-2.restaking-base.testnet"
+      startBlock: 138508317
     mapping:
       apiVersion: 0.0.6
       language: wasm/assemblyscript

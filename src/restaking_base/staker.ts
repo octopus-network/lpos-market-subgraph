@@ -3,7 +3,7 @@ import { StakeAction, Staker } from "../../generated/schema";
 import { convertStringToBigInt } from "../util";
 
 export class StakerHelper {
-	static newOrUpdateByStakerInfo(staker_info: JSON.Obj): void {
+	static newOrUpdateByStakerInfo(staker_info: JSON.Obj): Staker {
 		let staker_id = staker_info.getString("staker_id")!.valueOf()
 		let staker = Staker.load(staker_id)
 		if(!staker) {
@@ -19,5 +19,6 @@ export class StakerHelper {
 		staker.unbonding_unlock_time = convertStringToBigInt(staker_info.getString("unbonding_unlock_time")!.valueOf())
 
 		staker.save()
+		return staker
 	}
 }

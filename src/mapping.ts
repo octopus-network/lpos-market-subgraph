@@ -16,11 +16,12 @@ export function handleReceipt(
       let jsonObject = <JSON.Obj>(JSON.parse(outcomeLog));
 
       let standard = jsonObject.get("standard")!.toString();
+      let version = jsonObject.get("version")!.toString();
 
       if (standard == "lpos-market") {
-        handleLposMarketEvent(jsonObject, receiptWithOutcome, i)
+        handleLposMarketEvent(jsonObject, receiptWithOutcome, i, version)
       } else if (standard == "restaking-base") {
-        handleRestakingBaseEvent(jsonObject, receiptWithOutcome, i)
+        handleRestakingBaseEvent(jsonObject, receiptWithOutcome, i, version)
       }
     }
   }
