@@ -69,6 +69,10 @@ export class ValidatorHelper {
 
 	static destroy(validator_id: string): void {
 		let validator = Validator.load(validator_id)!;
+		validator.share_balance = BigInt.zero()
+		validator.total_share_balance = BigInt.zero()
+		validator.staked_balance = BigInt.zero()
+		validator.total_staked_balance = BigInt.zero()
 		validator.status = "Destroyed" 
 		validator.save()
 	}
