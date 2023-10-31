@@ -109,6 +109,8 @@ function handleBondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 	let key = data.getString("key")!.valueOf()
 	StakerAndConsumerChainHelper.bond(staker_id, consumer_chain_id, key)
 
+	StakerHelper.bond(staker_id)
+
 	UserActionHelp.new_staker_bond_action(data, receipt, logIndex)
 	
 }
@@ -126,6 +128,8 @@ function handleUnbondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log
 	let staker_id = data.getString("staker_id")!.valueOf()
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
 	StakerAndConsumerChainHelper.unbond(staker_id, consumer_chain_id)
+
+	StakerHelper.bond(staker_id)
 
 	UserActionHelp.new_staker_unbond_action(data, receipt, logIndex)
 }

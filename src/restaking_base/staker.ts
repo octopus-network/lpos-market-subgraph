@@ -21,4 +21,18 @@ export class StakerHelper {
 		staker.save()
 		return staker
 	}
+
+	static bond(staker_id: string): Staker {
+		let staker = Staker.load(staker_id)!
+		staker.bonding_consumer_chain_count += 1
+		staker.save()
+		return staker
+	}
+
+	static unbond(staker_id: string): Staker {
+		let staker = Staker.load(staker_id)!
+		staker.bonding_consumer_chain_count -= 1
+		staker.save()
+		return staker
+	}
 }
