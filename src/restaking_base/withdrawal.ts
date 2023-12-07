@@ -25,7 +25,7 @@ export class WithdrawalHelper {
 		withdrawal.unlock_time = unlock_time
 		withdrawal.beneficiary = beneficiary
 		withdrawal.create_action = create_action
-		withdrawal.status = "Pending"
+		withdrawal.is_withdrawn = false
 
 		withdrawal.save()
 		return withdrawal
@@ -49,7 +49,7 @@ export class WithdrawalHelper {
 		withdraw_action: string
 	): void {
 		let withdrawal = Withdrawal.load(withdraw_certificate)!
-		withdrawal.status = "Withdrawn"
+		withdrawal.is_withdrawn = true
 		withdrawal.withdraw_action = withdraw_action
 		withdrawal.save()
 	}

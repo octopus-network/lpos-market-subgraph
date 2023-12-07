@@ -1,5 +1,5 @@
 import { JSON } from "assemblyscript-json";
-import { ConsumerChain } from "../../generated/schema";
+import { ConsumerChain, Staker } from "../../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 
 export class ConsumerChainHelper {
@@ -23,4 +23,5 @@ export class ConsumerChainHelper {
 		consumer_chain.save()
 		return consumer_chain
 	}
+
 }

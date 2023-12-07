@@ -1,25 +1,11 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Delegator, DelegatorReward, SponsorReward, ValidatorReward } from "../../generated/schema";
+import { Delegator, DelegatorReward, ValidatorReward } from "../../generated/schema";
 
 export class RewardHelper {
 
 
 	static reward_id(account_id: string, reward_token_id: string): string {
 		return `${account_id}--${reward_token_id}`
-	}
-
-	static sponsorReceiveReward(sponsor_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
-		let sponsor_reward = SponsorReward.load(this.reward_id(sponsor_id, reward_token_id))
-
-		if(!sponsor_reward) {
-			sponsor_reward = new SponsorReward(this.reward_id(sponsor_id, reward_token_id))
-			sponsor_reward.reward_token_amount = BigInt.zero()
-		}
-		sponsor_reward.sponsor = sponsor_id
-		sponsor_reward.reward_token_id = reward_token_id
-		sponsor_reward.reward_token_amount = reward_token_amount.plus(sponsor_reward.reward_token_amount) 
-
-		sponsor_reward.save()
 	}
 
 	static delegatorReceiveReward(delegator_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
@@ -65,14 +51,6 @@ export class RewardHelper {
 		validator_reward.reward_token_amount = validator_reward.reward_token_amount.minus(reward_token_amount) 
 
 		validator_reward.save()
-	}
-
-	static sponsorClaimReward(sponsor_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
-		let sponsor_reward = SponsorReward.load(this.reward_id(sponsor_id, reward_token_id))!
-		
-		sponsor_reward.reward_token_amount = sponsor_reward.reward_token_amount.minus(reward_token_amount) 
-
-		sponsor_reward.save()
 	}
 
 }

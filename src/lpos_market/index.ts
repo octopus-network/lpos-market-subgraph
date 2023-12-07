@@ -1,12 +1,10 @@
-import { BigInt, log, near } from "@graphprotocol/graph-ts";
+import { BigInt, near } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
+import { SummaryHelper } from "../summary";
 import { UserActionHelp } from "../user_action";
 import { DelegatorHelper } from "./delegator";
 import { RewardHelper } from "./reward";
 import { ValidatorHelper } from "./validator";
-import { ConsumerChainHelper } from "../restaking_base/consumer_chain";
-import { SummaryHelper } from "../summary";
-import { SponsorHelper } from "./sponsor";
 
 
 export function handleLposMarketEvent(eventObj: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
@@ -47,21 +45,13 @@ export function handleLposMarketEvent(eventObj: JSON.Obj, receipt: near.ReceiptW
 		handleDelegatorClaimRewardEvent(objInData, receipt, logIndex)
 	} else if (event == "validator_claim_reward") {
 		handleValidatorClaimRewardEvent(objInData, receipt, logIndex)
-	} else if (event == "sponsor") {
-		handleSponsorEvent(objInData, receipt, logIndex)
-	} else if (event == "increase_sponsorship") {
-		handleIncreaseSponsorshipEvent(objInData, receipt, logIndex)
-	} else if (event == "decrease_sponsorship") {
-		handleDecreaseSponsorshipEvent(objInData, receipt, logIndex)
-	} else if (event == "unsponsor") {
-		handleUnsponsorEvent(objInData, receipt, logIndex)
-	} else if(event == "withdraw_unsponsor") {
-		handleWithdrawUnsponsorEvent(objInData, receipt, logIndex)
-	} else if (event == "sponsor_receive_reward") {
-		handleSponsorReceiveRewardEvent(objInData, receipt, logIndex)
-	} else if (event == "sponsor_claim_reward") {
-		handleSponsorClaimRewardEvent(objInData, receipt, logIndex)
-	}
+	} else if (event == "restake") {
+		handleRestakeEvent(objInData, receipt, logIndex)
+	}  else if (event == "unrestake") {
+		handleUnrestakeEvent(objInData, receipt, logIndex)
+	}  else if (event == "change_key") {
+		handleChangeKeyEvent(objInData, receipt, logIndex)
+	} 
 }
 
 
@@ -102,7 +92,7 @@ function handleDeployEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log
  * @param logIndex 
  */
 function handleStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
+	let validator = ValidatorHelper.stake(data.getObj("validator_info")!)
 	UserActionHelp.new_stake_action(data, receipt, logIndex, validator.validator_id)
 }
 
@@ -255,85 +245,25 @@ function handleValidatorClaimRewardEvent(data: JSON.Obj, receipt: near.ReceiptWi
 
 }
 
-function handleSponsorEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
+function handleRestakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_restake_action(data, receipt, logIndex)
+	let validator_id = data.getString("validator_id")!.valueOf()
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-	let amount = BigInt.fromString(data.getString("amount")!.valueOf())
-	UserActionHelp.new_sponsor_action(data, receipt, logIndex)
-	SponsorHelper.sponsor(sponsor_id, amount, consumer_chain_id)
-
+	let key = data.getString("key")!.valueOf()
+	// ValidatorHelper.restake(validator_id, consumer_chain_id, key)
 }
 
-function handleIncreaseSponsorshipEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
+function handleUnrestakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_unrestake_action(data, receipt, logIndex)
+	let validator_id = data.getString("validator_id")!.valueOf()
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-	let amount = BigInt.fromString(data.getString("amount")!.valueOf())
-	UserActionHelp.new_increase_sponsorship_action(data, receipt, logIndex)
-	SponsorHelper.increase_sponsorship(sponsor_id, amount, consumer_chain_id)
+	// ValidatorHelper.unrestake(validator_id, consumer_chain_id)
 }
 
-function handleDecreaseSponsorshipEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
+function handleChangeKeyEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_change_key_action(data, receipt, logIndex)
+	let validator_id = data.getString("validator_id")!.valueOf()
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-	let amount = BigInt.fromString(data.getString("amount")!.valueOf())
-	let unlock_time = BigInt.fromString(data.getString("unlock_time")!.valueOf())
-	let unsponsor_record_id="";
-	if(data.getString("unsponsor_uuid")) {
-		unsponsor_record_id = data.getString("unsponsor_uuid")!.valueOf()
-	} else {
-		unsponsor_record_id = data.getString("unsponsor_record_id")!.valueOf()
-	}
-	
-	let user_action = UserActionHelp.new_decrease_sponsorship_action(
-		data, 
-		receipt, 
-		logIndex,
-		unsponsor_record_id
-
-	)
-	SponsorHelper.unsponsor_record(sponsor_id, amount, consumer_chain_id, unsponsor_record_id, unlock_time, user_action.id)
-	SponsorHelper.decrease_sponsorship(sponsor_id, amount, consumer_chain_id)
-}
-
-function handleUnsponsorEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
-	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-	let amount = BigInt.fromString(data.getString("amount")!.valueOf())
-	let unlock_time = BigInt.fromString(data.getString("unlock_time")!.valueOf())
-
-	let unsponsor_record_id="";
-	if(data.getString("unsponsor_uuid")) {
-		unsponsor_record_id = data.getString("unsponsor_uuid")!.valueOf()
-	} else {
-		unsponsor_record_id = data.getString("unsponsor_record_id")!.valueOf()
-	}
-	let user_action = UserActionHelp.new_unsponsor_action(data, receipt, logIndex, unsponsor_record_id)
-	SponsorHelper.unsponsor_record(
-		sponsor_id, amount, consumer_chain_id, unsponsor_record_id, unlock_time, user_action.id)
-	SponsorHelper.unsponsor(sponsor_id, amount, consumer_chain_id)
-}
-
-function handleWithdrawUnsponsorEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	let user_action = UserActionHelp.new_withdraw_unsponsor_action(data, receipt, logIndex);
-	SponsorHelper.withdraw_unsponsor(
-		data.getString("unsponsor_record_id")!.valueOf(),
-		user_action.id
-	)
-}
-
-function handleSponsorReceiveRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	UserActionHelp.new_sponsor_receive_reward_action(data, receipt, logIndex)
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
-	let reward_token_id = data.getString("reward_token_id")!.valueOf()
-	let reward_token_amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
-	RewardHelper.sponsorReceiveReward(sponsor_id, reward_token_id, reward_token_amount)
-}
-
-function handleSponsorClaimRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	UserActionHelp.new_sponsor_claim_reward_action(data, receipt, logIndex)
-
-	let sponsor_id = data.getString("sponsor_id")!.valueOf()
-	let reward_token_id = data.getString("reward_token_id")!.valueOf()
-	let reward_token_amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
-	RewardHelper.sponsorClaimReward(sponsor_id, reward_token_id, reward_token_amount)
+	let key = data.getString("key")!.valueOf()
+	// ValidatorHelper.change_key(validator_id, consumer_chain_id, key)
 }

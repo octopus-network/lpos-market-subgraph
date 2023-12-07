@@ -1,10 +1,20 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
+import { BigInt, log, store } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
-import { Delegator, Validator } from "../../generated/schema";
+import { Delegator, Staker, Validator } from "../../generated/schema";
 import { staked_balance_from_shares } from "../util";
 
 
 export class ValidatorHelper {
+
+	static stake(validator_info: JSON.Obj): Validator{
+		let validator = this.newOrUpdateByValidatorInfo(validator_info)
+		let staker = Staker.load(validator.escrow_id)!
+		staker.validator = validator.validator_id 
+		staker.save()
+
+		return validator
+	}
+
 	static newOrUpdateByValidatorInfo(validator_info: JSON.Obj): Validator {
 		let validator_id = validator_info.getString("validator_id")!.valueOf()
 		let validator = Validator.load(validator_id)
@@ -104,4 +114,33 @@ export class ValidatorHelper {
 		}
 		validator.save()
 	}
+
+
+	static validator_and_consumer_chain_id(validator_id: string, consumer_chain_id: string): string {
+		return validator_id+'#'+consumer_chain_id
+
+	}
+
+	// static restake(validator_id: string, consumer_chain_id: string, key: string): void {
+	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+	// 	let validator_and_consumer_chain = new ValidatorAndConsumerChain(validator_and_consumer_chain_id)
+
+	// 	validator_and_consumer_chain.consumer_chain = consumer_chain_id
+	// 	validator_and_consumer_chain.validator = validator_id
+	// 	validator_and_consumer_chain.key = key
+
+	// 	validator_and_consumer_chain.save()
+	// }
+
+	// static unrestake(validator_id: string, consumer_chain_id: string): void{
+	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+	// 	store.remove("ValidatorAndConsumerChain", validator_and_consumer_chain_id);
+	// }
+
+	// static change_key(validator_id: string, consumer_chain_id: string, key: string): void {
+	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+	// 	let validator_and_consumer_chain = ValidatorAndConsumerChain.load(validator_and_consumer_chain_id)!
+	// 	validator_and_consumer_chain.key = key
+	// 	validator_and_consumer_chain.save()
+	// }
 }

@@ -1,6 +1,6 @@
 import { BigInt, log, near } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
-import { ChangeKeyAction, DecreaseDelegationAction, DecreaseSponsorshipAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseSponsorshipAction, IncreaseStakeAction, PingAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, SponsorAction, SponsorClaimRewardAction, SponsorReceiveRewardAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnsponsorAction, UnstakeAction, UpdateConsumerChainAction, UserAction, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnsponsorAction, WithdrawUnstakeAction, Withdrawal } from "../generated/schema";
+import { ChangeKeyAction, DecreaseDelegationAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseStakeAction, PingAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnstakeAction, UpdateConsumerChainAction, UserAction, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnstakeAction, Withdrawal } from "../generated/schema";
 
 
 export type ActionId = string
@@ -32,8 +32,6 @@ export namespace action_types {
 	export const unstake_action = 'unstake_action'
 	export const destroy_action = 'destroy_action'
 
-
-
 	export const restake_action = 'restake_action'
 	export const unrestake_action = 'unrestake_action'
 	export const change_key_action = 'change_key_action'
@@ -50,16 +48,6 @@ export namespace action_types {
 	export const validator_receive_reward_action = 'validator_receive_reward_action'
 	export const delegator_claim_reward_action = 'delegator_claim_reward_action'
 	export const validator_claim_reward_action = 'validator_claim_reward_action'
-
-	// sponsor
-	export const sponsor_action= 'sponsor_action'
-	export const increase_sponsorship_action = 'increase_sponsorship_action'
-	export const decrease_sponsorship_action = 'decrease_sponsorship_action'
-	export const unsponsor_action = 'unsponsor_action'
-	export const withdraw_unsponsor_action = 'withdraw_unsponsor_action'
-	export const sponsor_receive_reward_action = 'sponsor_receive_reward_action'
-	export const sponsor_claim_reward_action = 'sponsor_claim_reward_action'
-
 }
 
 export class UserActionHelp {
@@ -368,6 +356,7 @@ export class UserActionHelp {
 		user_action.save()
 
 	}
+
 	static new_unrestake_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.unrestake_action, receipt, log_id)
 		let unrestake_action = new UnrestakeAction(user_action.id)
@@ -378,6 +367,7 @@ export class UserActionHelp {
 		user_action.unrestake_action = user_action.id
 		user_action.save()
 	}
+
 	static new_change_key_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.change_key_action, receipt, log_id)
 		let change_key_action = new ChangeKeyAction(user_action.id)
@@ -565,19 +555,6 @@ export class UserActionHelp {
 		user_action.save()
 	}
 
-	static new_sponsor_receive_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
-		let user_action = this.new_user_action(action_types.sponsor_receive_reward_action, receipt, log_id)
-		let sponsor_receive_reward_action = new SponsorReceiveRewardAction(user_action.id)
-		sponsor_receive_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
-		sponsor_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
-		sponsor_receive_reward_action.receiver = data.getString("sponsor_id")!.valueOf()
-
-		sponsor_receive_reward_action.save()
-
-		user_action.sponsor_receive_reward_action = user_action.id
-		user_action.save()
-	}
-
 	static new_delegator_claim_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.delegator_claim_reward_action, receipt, log_id)
 		let delegator_claim_reward_action = new DelegatorClaimRewardAction(user_action.id)
@@ -604,108 +581,4 @@ export class UserActionHelp {
 		user_action.save()
 	}
 
-	static new_sponsor_claim_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
-		let user_action = this.new_user_action(action_types.sponsor_claim_reward_action, receipt, log_id)
-		let sponsor_claim_reward_action = new SponsorClaimRewardAction(user_action.id)
-		sponsor_claim_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
-		sponsor_claim_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
-		sponsor_claim_reward_action.receiver = data.getString("sponsor_id")!.valueOf()
-
-		sponsor_claim_reward_action.save()
-
-		user_action.sponsor_claim_reward_action = user_action.id
-		user_action.save()
-	}
-
-	static new_sponsor_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
-		let user_action = this.new_user_action(action_types.sponsor_action, receipt, log_id)
-		let sponsor_action = new SponsorAction(user_action.id)
-
-		sponsor_action.sponsor_id = data.getString("sponsor_id")!.valueOf()
-		sponsor_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-		sponsor_action.amount = BigInt.fromString(data.getString("amount")!.valueOf())
-		sponsor_action.sequence = BigInt.fromString(data.getString("sequence")!.valueOf())
-
-		user_action.sponsor_action = sponsor_action.id
-		user_action.save()
-	}
-
-	static new_increase_sponsorship_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
-		let user_action = this.new_user_action(action_types.increase_sponsorship_action, receipt, log_id)
-		let increase_sponsorship_action = new IncreaseSponsorshipAction(user_action.id)
-		increase_sponsorship_action.sponsor_id = data.getString("sponsor_id")!.valueOf()
-		increase_sponsorship_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-		increase_sponsorship_action.amount = BigInt.fromString(data.getString("amount")!.valueOf())
-		increase_sponsorship_action.sequence = BigInt.fromString(data.getString("sequence")!.valueOf())
-
-		increase_sponsorship_action.save()
-
-		user_action.increase_sponsorship_action = increase_sponsorship_action.id
-		user_action.save()
-
-	}
-
-	static new_decrease_sponsorship_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number,
-		unsponsor_record_id: string
-		): UserAction {
-		let user_action = this.new_user_action(action_types.decrease_sponsorship_action, receipt, log_id)
-		let decrease_sponsorship_action = new DecreaseSponsorshipAction(user_action.id)
-		decrease_sponsorship_action.sponsor_id = data.getString("sponsor_id")!.valueOf()
-		decrease_sponsorship_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-		decrease_sponsorship_action.amount = BigInt.fromString(data.getString("amount")!.valueOf())
-		decrease_sponsorship_action.sequence = BigInt.fromString(data.getString("sequence")!.valueOf())
-		decrease_sponsorship_action.unlock_time = BigInt.fromString(data.getString("unlock_time")!.valueOf())
-		decrease_sponsorship_action.unsponsor_record = unsponsor_record_id
-
-		decrease_sponsorship_action.save()
-
-		user_action.decrease_sponsorship_action = decrease_sponsorship_action.id
-		user_action.save()
-		return user_action
-	}
-
-	static new_unsponsor_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number,
-		unsponsor_record_id: string
-		):UserAction {
-		let user_action = this.new_user_action(action_types.unsponsor_action, receipt, log_id)
-		let unsponsor_action = new UnsponsorAction(user_action.id)
-
-		unsponsor_action.sponsor_id = data.getString("sponsor_id")!.valueOf()
-		unsponsor_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-		unsponsor_action.amount = BigInt.fromString(data.getString("amount")!.valueOf())
-		unsponsor_action.sequence = BigInt.fromString(data.getString("sequence")!.valueOf())
-		unsponsor_action.unlock_time = BigInt.fromString(data.getString("unlock_time")!.valueOf())
-		unsponsor_action.unsponsor_record = unsponsor_record_id
-
-		unsponsor_action.save()
-
-		user_action.decrease_sponsorship_action = unsponsor_action.id
-		user_action.save()
-		return user_action
-
-	}
-
-	static new_withdraw_unsponsor_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): UserAction {
-		let user_action = this.new_user_action(action_types.withdraw_unsponsor_action, receipt, log_id)
-		let withdraw_unsponsor_action = new WithdrawUnsponsorAction(user_action.id)
-
-		withdraw_unsponsor_action.sponsor_id = data.getString("sponsor_id")!.valueOf()
-		withdraw_unsponsor_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
-		withdraw_unsponsor_action.amount = BigInt.fromString(data.getString("amount")!.valueOf())
-		withdraw_unsponsor_action.unsponsor_record = data.getString("unsponsor_record_id")!.valueOf()
-		withdraw_unsponsor_action.unsponsor_record_id = data.getString("unsponsor_record_id")!.valueOf()
-
-		withdraw_unsponsor_action.save()
-
-		user_action.withdraw_unsponsor_action = withdraw_unsponsor_action.id
-		user_action.save()
-		return user_action
-
-	}
 }

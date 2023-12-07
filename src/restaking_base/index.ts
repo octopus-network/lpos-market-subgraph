@@ -92,6 +92,7 @@ function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
 	let staker = StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
+	StakerHelper.unstake(staker.staker_id)
 	let user_action = UserActionHelp.new_staker_unstake_action(data, receipt, logIndex)
 	WithdrawalHelper.newByPendingWithdrawalData(
 		data.getObj("pending_withdrawal")!,
@@ -109,7 +110,7 @@ function handleBondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 	let key = data.getString("key")!.valueOf()
 	StakerAndConsumerChainHelper.bond(staker_id, consumer_chain_id, key)
 
-	StakerHelper.bond(staker_id)
+	StakerHelper.bond(staker_id, consumer_chain_id)
 
 	UserActionHelp.new_staker_bond_action(data, receipt, logIndex)
 	
@@ -129,7 +130,7 @@ function handleUnbondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
 	StakerAndConsumerChainHelper.unbond(staker_id, consumer_chain_id)
 
-	StakerHelper.bond(staker_id)
+	StakerHelper.unbond(staker_id, consumer_chain_id)
 
 	UserActionHelp.new_staker_unbond_action(data, receipt, logIndex)
 }

@@ -13,8 +13,10 @@ type Staker @entity {
   select_staking_pool_id: String,
   select_staking_pool: StakingPool,
   shares: BigInt!,
+  validator: Validator,
 
   bonding_consumer_chain_count: Int!
+  bonding_consumer_chain_list_string: String!
   bonding_consumer_chains: [StakerAndConsumerChain!] @derivedFrom(field: "staker") ,
   max_bonding_unlock_period: BigInt!,
   unbonding_unlock_time: BigInt!,
@@ -70,22 +72,6 @@ type DelegatorReward @entity {
   reward_token_amount: BigInt!
 }
 
-type Sponsor @entity {
-  id: ID!
-  total_sponsor_amount: BigInt!
-  sponsor_consumer_chain_count: Int!
-  sponsor_consumer_chains: [SponsorAndConsumerChain!] @derivedFrom(field: "sponsor") ,
-  rewards: [SponsorReward!] @derivedFrom(field: "sponsor")
-  unsponsor_record: [UnsponsorRecord!] @derivedFrom(field: "sponsor")
-}
-
-type SponsorReward @entity {
-  id: ID!
-  sponsor: Sponsor!
-  reward_token_id: String!
-  reward_token_amount: BigInt!
-}
-
 type ConsumerChain @entity {
   id: ID!
   consumer_chain_id: String!,
@@ -106,14 +92,6 @@ type StakerAndConsumerChain @entity {
   key: String!
 }
 
-type SponsorAndConsumerChain @entity {
-  id: ID!
-  sponsor: Sponsor!
-  consumer_chain: ConsumerChain!
-  unlock_time: BigInt
-  sponsor_amount: BigInt!
-  is_sponsoring: Boolean! 
-}
 
 enum SlashStatus {
   Pending,
@@ -139,11 +117,6 @@ type Summary @entity {
   staking_pool_list: String!
 }
 
-enum WithdrawalStatus {
-  Pending,
-  Withdrawn,
-}
-
 type Withdrawal @entity {
   id: ID!
 
@@ -160,21 +133,7 @@ type Withdrawal @entity {
   create_action: UserAction!
   withdraw_action: WithdrawAction
 
-  status: WithdrawalStatus!
-  
-}
-
-type UnsponsorRecord @entity {
-  id: ID!
-  sponsor: Sponsor!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt!
-  unlock_time: BigInt!
-  is_withdraw: Boolean! 
-
-  create_action: UserAction!
-  withdraw_action: UserAction
+  is_withdrawn: Boolean! 
 }
 
 enum ActionType {
@@ -203,6 +162,10 @@ enum ActionType {
   destroy_action,
   validator_ping_action,
 
+  validator_restake_action,
+  validator_change_key_action,
+  validator_unrestake_action,
+
   # cc gov
   register_consumer_chain_action,
   update_consumer_chain_action,
@@ -223,17 +186,6 @@ enum ActionType {
 
   delegator_claim_reward_action,
   validator_claim_reward_action,
-
-  # sponsor
-  sponsor_action,
-  increase_sponsorship_action,
-  decrease_sponsorship_action,
-  unsponsor_action,
-
-  sponsor_receive_reward_action,
-  sponsor_claim_reward_action,
-  withdraw_unsponsor_action,
-
 
   #registry 
   register_consumer_chain_in_lpos_market_action,
@@ -304,80 +256,8 @@ type UserAction @entity {
   delegator_claim_reward_action: DelegatorClaimRewardAction,
   validator_claim_reward_action: ValidatorClaimRewardAction,
 
-  # sponsor
-  sponsor_action: SponsorAction,
-  increase_sponsorship_action: IncreaseSponsorshipAction,
-  decrease_sponsorship_action: DecreaseSponsorshipAction,
-  unsponsor_action: UnsponsorAction,
-  withdraw_unsponsor_action: WithdrawUnsponsorAction,
-
-  sponsor_receive_reward_action: SponsorReceiveRewardAction,
-  sponsor_claim_reward_action: SponsorClaimRewardAction,
-
   # registry
   register_consumer_chain_in_lpos_market_action: RegisterConsumerChainInLposMarketAction,
-}
-
-type SponsorAction @entity {
-  id: ID!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt! 
-  sequence: BigInt!
-}
-
-type IncreaseSponsorshipAction @entity {
-  id: ID!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt! 
-  sequence: BigInt!
-
-} 
-
-type DecreaseSponsorshipAction @entity {
-  id: ID!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt! 
-  sequence: BigInt!
-  unlock_time: BigInt!
-
-  unsponsor_record: UnsponsorRecord!
-}
-
-type UnsponsorAction @entity {
-  id: ID!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt! 
-  sequence: BigInt!
-  unlock_time: BigInt!
-
-  unsponsor_record: UnsponsorRecord!
-}
-
-type WithdrawUnsponsorAction @entity {
-  id: ID!
-  sponsor_id: String!
-  consumer_chain_id: String!
-  amount: BigInt!
-  unsponsor_record_id: String!
-  unsponsor_record: UnsponsorRecord!
-}
-
-type SponsorReceiveRewardAction @entity {
-  id: ID!
-  token_id: String!
-  amount: BigInt!
-  receiver: String!
-}
-
-type SponsorClaimRewardAction @entity {
-  id: ID!
-  token_id: String!
-  amount: BigInt!
-  receiver: String!
 }
 
 type PingAction @entity {
