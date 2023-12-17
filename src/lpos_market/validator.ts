@@ -1,10 +1,20 @@
 import { BigInt, log, store } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
-import { Delegator, Staker, Validator } from "../../generated/schema";
+import { Delegator, Staker, Validator, ValidatorAndConsumerChain, Withdrawal } from "../../generated/schema";
 import { staked_balance_from_shares } from "../util";
+import { DelegatorHelper } from "./delegator";
 
 
 export class ValidatorHelper {
+
+	static updateReward(validator: Validator): Validator {
+		validator.near_staking_reward_amount = validator.staked_balance.plus(validator.decrease_staking_amount).minus(validator.increase_staking_amount)
+
+		if(validator.near_staking_reward_amount.lt(BigInt.zero())) {
+			validator.near_staking_reward_amount = BigInt.zero()
+		}
+		return validator
+	}
 
 	static stake(validator_info: JSON.Obj): Validator{
 		let validator = this.newOrUpdateByValidatorInfo(validator_info)
@@ -24,6 +34,10 @@ export class ValidatorHelper {
 			validator.delegator_count = 0
 			validator.delegator_list_string = [].join(',')
 			validator.validator_id = validator_id
+			validator.bonding_consumer_chain_count = 0
+			validator.increase_staking_amount = BigInt.zero()
+			validator.decrease_staking_amount = BigInt.zero()
+			validator.near_staking_reward_amount = BigInt.zero()
 		}
 		validator.escrow_id = validator_info.getString("escrow_id")!.valueOf()
 		validator.total_staked_balance = BigInt.fromString(validator_info.getString("total_staked_balance")!.valueOf())
@@ -38,6 +52,13 @@ export class ValidatorHelper {
 		if (validator_info.getString("unstake_withdraw_certificate")) {
 
 			validator.unstake_withdraw_certificate = validator_info.getString("unstake_withdraw_certificate")!.valueOf()
+			let withdrawal = Withdrawal.load(validator.unstake_withdraw_certificate!)!
+			validator.total_staked_balance = withdrawal.amount
+			validator.staked_balance = staked_balance_from_shares(
+				validator.total_staked_balance,
+				validator.total_share_balance,
+				validator.share_balance
+			)
 		}
 
 		validator.staker = validator.escrow_id
@@ -83,6 +104,9 @@ export class ValidatorHelper {
 		validator.total_share_balance = BigInt.zero()
 		validator.staked_balance = BigInt.zero()
 		validator.total_staked_balance = BigInt.zero()
+		validator.increase_staking_amount = BigInt.zero()
+		validator.decrease_staking_amount = BigInt.zero()
+		validator.near_staking_reward_amount = BigInt.zero()
 		validator.status = "Destroyed" 
 		validator.save()
 	}
@@ -95,6 +119,7 @@ export class ValidatorHelper {
 			validator.total_share_balance,
 			validator.share_balance
 		)
+		validator = ValidatorHelper.updateReward(validator)
 
 		let delegator_list = validator.delegator_list_string.split(',');
 
@@ -110,6 +135,7 @@ export class ValidatorHelper {
 				validator.total_share_balance,
 				delegator.share_balance
 			)
+			delegator = DelegatorHelper.updateReward(delegator)
 			delegator.save()
 		}
 		validator.save()
@@ -121,26 +147,27 @@ export class ValidatorHelper {
 
 	}
 
-	// static restake(validator_id: string, consumer_chain_id: string, key: string): void {
-	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
-	// 	let validator_and_consumer_chain = new ValidatorAndConsumerChain(validator_and_consumer_chain_id)
+	static restake(validator_id: string, consumer_chain_id: string, key: string): void {
 
-	// 	validator_and_consumer_chain.consumer_chain = consumer_chain_id
-	// 	validator_and_consumer_chain.validator = validator_id
-	// 	validator_and_consumer_chain.key = key
+		let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+		let validator_and_consumer_chain = new ValidatorAndConsumerChain(validator_and_consumer_chain_id)
 
-	// 	validator_and_consumer_chain.save()
-	// }
+		validator_and_consumer_chain.consumer_chain = consumer_chain_id
+		validator_and_consumer_chain.validator = validator_id
+		validator_and_consumer_chain.key = key
 
-	// static unrestake(validator_id: string, consumer_chain_id: string): void{
-	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
-	// 	store.remove("ValidatorAndConsumerChain", validator_and_consumer_chain_id);
-	// }
+		validator_and_consumer_chain.save()
+	}
 
-	// static change_key(validator_id: string, consumer_chain_id: string, key: string): void {
-	// 	let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
-	// 	let validator_and_consumer_chain = ValidatorAndConsumerChain.load(validator_and_consumer_chain_id)!
-	// 	validator_and_consumer_chain.key = key
-	// 	validator_and_consumer_chain.save()
-	// }
+	static unrestake(validator_id: string, consumer_chain_id: string): void{
+		let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+		store.remove("ValidatorAndConsumerChain", validator_and_consumer_chain_id);
+	}
+
+	static change_key(validator_id: string, consumer_chain_id: string, key: string): void {
+		let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
+		let validator_and_consumer_chain = ValidatorAndConsumerChain.load(validator_and_consumer_chain_id)!
+		validator_and_consumer_chain.key = key
+		validator_and_consumer_chain.save()
+	}
 }

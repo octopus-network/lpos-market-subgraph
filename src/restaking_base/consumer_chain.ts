@@ -13,7 +13,11 @@ export class ConsumerChainHelper {
 		}
 
 		consumer_chain.consumer_chain_id = consumer_chain_id
-		consumer_chain.unbond_period = BigInt.fromI64(consumer_chain_info.getInteger("unbond_period")!.valueOf())
+		if(consumer_chain_info.getInteger("unbond_period")) {
+			consumer_chain.unbonding_period = BigInt.fromI64(consumer_chain_info.getInteger("unbond_period")!.valueOf())
+		} else {
+			consumer_chain.unbonding_period = BigInt.fromI64(consumer_chain_info.getInteger("unbonding_period")!.valueOf())
+		}
 		consumer_chain.website = consumer_chain_info.getString("website")!.valueOf()
 		consumer_chain.governance = consumer_chain_info.getString("governance")!.valueOf()
 		consumer_chain.treasury = consumer_chain_info.getString("treasury")!.valueOf()

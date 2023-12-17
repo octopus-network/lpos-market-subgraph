@@ -127,8 +127,9 @@ function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 }
 
 function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	let validator_id = data.getObj("validator_info")!.getString("validator_id")!.valueOf()
+	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator_id);
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
-	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator.validator_id);
 }
 
 function handleWithdrawInUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -149,8 +150,14 @@ function handelDestroyEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, lo
 
 function handleDelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
-	DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
-	UserActionHelp.new_delegate_action(data, receipt, logIndex, validator.validator_id)
+	let delegator = DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
+	UserActionHelp.new_delegate_action(
+		data, 
+		receipt, 
+		logIndex, 
+		validator.validator_id,
+		delegator
+	)
 
 	ValidatorHelper.delegate(validator.id, data.getObj("delegator_info")!.getString("delegator_id")!.valueOf())
 	let summary = SummaryHelper.getOrNew()
@@ -160,14 +167,14 @@ function handleDelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, l
 
 function handleIncreaseDelegationEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
-	DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
-	UserActionHelp.new_increase_delegation_action(data, receipt, logIndex, validator.validator_id)
+	let delegator = DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
+	UserActionHelp.new_increase_delegation_action(data, receipt, logIndex, validator.validator_id, delegator)
 }
 
 function handleDecreaseDelegationEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
-	DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
-	UserActionHelp.new_decrease_delegation_action(data, receipt, logIndex, validator.validator_id)
+	let delegator = DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
+	UserActionHelp.new_decrease_delegation_action(data, receipt, logIndex, validator.validator_id, delegator)
 }
 
 function handleUndelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {

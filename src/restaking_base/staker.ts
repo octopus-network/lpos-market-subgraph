@@ -1,7 +1,8 @@
 import { JSON } from "assemblyscript-json";
-import { StakeAction, Staker } from "../../generated/schema";
+import { StakeAction, Staker, Validator, ValidatorAndConsumerChain } from "../../generated/schema";
 import { convertStringToBigInt } from "../util";
 import { StakerAndConsumerChainHelper } from "./staker_and_consumer_chain";
+import { ValidatorHelper } from "../lpos_market/validator";
 
 export class StakerHelper {
 	static newOrUpdateByStakerInfo(staker_info: JSON.Obj): Staker {
@@ -32,6 +33,14 @@ export class StakerHelper {
 
 		staker.bonding_consumer_chain_list_string = cc_list.join(',')
 		staker.save()
+
+
+		if(staker.validator) {
+			let validator = Validator.load(staker.validator!)!
+			validator.bonding_consumer_chain_count += 1
+			validator.save()
+		}
+
 		return staker
 	}
 
@@ -50,6 +59,13 @@ export class StakerHelper {
 		staker.bonding_consumer_chain_count -= 1
 		staker.bonding_consumer_chain_list_string = after_unbond_cc_list.join(',')
 		staker.save()
+
+		if(staker.validator) {
+			let validator = Validator.load(staker.validator!)!
+			validator.bonding_consumer_chain_count -= 1
+			validator.save()
+		}
+
 		return staker
 	}
 
@@ -63,5 +79,11 @@ export class StakerHelper {
 		staker.bonding_consumer_chain_count = 0
 		staker.bonding_consumer_chain_list_string = [].join(',')
 		staker.save()
+
+		if(staker.validator) {
+			let validator = Validator.load(staker.validator!)!
+			validator.bonding_consumer_chain_count = 0
+			validator.save()
+		}
 	 }
 }

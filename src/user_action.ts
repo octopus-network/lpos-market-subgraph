@@ -1,6 +1,8 @@
 import { BigInt, log, near } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
-import { ChangeKeyAction, DecreaseDelegationAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseStakeAction, PingAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnstakeAction, UpdateConsumerChainAction, UserAction, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnstakeAction, Withdrawal } from "../generated/schema";
+import { ChangeKeyAction, DecreaseDelegationAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseStakeAction, PingAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnstakeAction, UpdateConsumerChainAction, UserAction, Validator, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnstakeAction, Withdrawal } from "../generated/schema";
+import { ValidatorHelper } from "./lpos_market/validator";
+import { DelegatorHelper } from "./lpos_market/delegator";
 
 
 export type ActionId = string
@@ -280,6 +282,13 @@ export class UserActionHelp {
 
 		user_action.stake_action = user_action.id
 		user_action.save()
+
+		let validator = Validator.load(validator_id)!
+		validator.increase_staking_amount = validator.increase_staking_amount.plus(stake_action.amount)
+
+		validator = ValidatorHelper.updateReward(validator)
+
+		validator.save()
 	}
 
 	static new_increase_stake_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
@@ -294,6 +303,14 @@ export class UserActionHelp {
 
 		user_action.increase_stake_action = user_action.id
 		user_action.save()
+
+
+		let validator = Validator.load(validator_id)!
+		validator.increase_staking_amount = validator.increase_staking_amount.plus(increase_stake_action.amount)
+
+		validator = ValidatorHelper.updateReward(validator)
+
+		validator.save()
 	}
 
 	static new_decrease_stake_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
@@ -317,6 +334,13 @@ export class UserActionHelp {
 		let withdrawal = Withdrawal.load(decrease_stake_action.withdrawal)!
 		withdrawal.validator_id = validator_id
 		withdrawal.save()
+
+		let validator = Validator.load(validator_id)!
+		validator.decrease_staking_amount = validator.decrease_staking_amount.plus(decrease_stake_action.amount)
+
+		validator = ValidatorHelper.updateReward(validator)
+
+		validator.save()
 	}
 
 	static new_unstake_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
@@ -330,6 +354,13 @@ export class UserActionHelp {
 
 		user_action.unstake_action = unstake_action.id
 		user_action.save()
+
+		let validator = Validator.load(validator_id)!
+		validator.decrease_staking_amount = validator.decrease_staking_amount.plus(validator.staked_balance)
+
+		validator = ValidatorHelper.updateReward(validator)
+
+		validator.save()
 	}
 
 	static new_destroy_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string ): void {
@@ -379,7 +410,13 @@ export class UserActionHelp {
 		user_action.change_key_action = user_action.id
 		user_action.save()
 	}
-	static new_delegate_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
+	static new_delegate_action(
+		data: JSON.Obj, 
+		receipt: near.ReceiptWithOutcome, 
+		log_id: number, 
+		validator_id: string, 
+		delegator: Delegator
+	): void {
 		let user_action = this.new_user_action(action_types.delegate_action, receipt, log_id)
 		let delegate_action = new DelegateAction(user_action.id)
 		delegate_action.validator_id = data.getObj("validator_info")!.getString("validator_id")!.valueOf()
@@ -391,8 +428,22 @@ export class UserActionHelp {
 
 		user_action.delegate_action = user_action.id
 		user_action.save()
+
+		delegator.increase_staking_amount = delegator
+		.increase_staking_amount
+		.plus(delegate_action.amount)
+
+		delegator = DelegatorHelper.updateReward(delegator)
+
+		delegator.save()
 	}
-	static new_increase_delegation_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
+	static new_increase_delegation_action(
+		data: JSON.Obj, 
+		receipt: near.ReceiptWithOutcome, 
+		log_id: number, 
+		validator_id: string,
+		delegator: Delegator
+	): void {
 		let user_action = this.new_user_action(action_types.increase_delegation_action, receipt, log_id)
 		let increase_delegation_action = new IncreaseDelegationAction(user_action.id)
 		increase_delegation_action.amount = BigInt.fromString(data.getString("increase_delegation_amount")!.valueOf())
@@ -403,9 +454,23 @@ export class UserActionHelp {
 
 		user_action.increase_delegation_action = user_action.id
 		user_action.save()
+
+		delegator.increase_staking_amount = delegator
+		.increase_staking_amount
+		.plus(increase_delegation_action.amount)
+
+		delegator = DelegatorHelper.updateReward(delegator)
+
+		delegator.save()
 	}
 
-	static new_decrease_delegation_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): UserAction {
+	static new_decrease_delegation_action(
+		data: JSON.Obj, 
+		receipt: near.ReceiptWithOutcome, 
+		log_id: number, 
+		validator_id: string,
+		delegator: Delegator
+	): UserAction {
 		let user_action = this.new_user_action(action_types.decrease_delegation_action, receipt, log_id)
 		let decrease_delegation_action = new DecreaseDelegationAction(user_action.id)
 		decrease_delegation_action.amount = BigInt.fromString(data.getString("decrease_delegation_amount")!.valueOf())
@@ -424,6 +489,15 @@ export class UserActionHelp {
 		let withdrawal = Withdrawal.load(decrease_delegation_action.withdrawal)!
 		withdrawal.validator_id = validator_id
 		withdrawal.save()
+
+
+		delegator.increase_staking_amount = delegator
+		.increase_staking_amount
+		.plus(decrease_delegation_action.amount)
+
+		delegator = DelegatorHelper.updateReward(delegator)
+
+		delegator.save()
 
 		return user_action
 	}

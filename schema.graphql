@@ -17,7 +17,7 @@ type Staker @entity {
 
   bonding_consumer_chain_count: Int!
   bonding_consumer_chain_list_string: String!
-  bonding_consumer_chains: [StakerAndConsumerChain!] @derivedFrom(field: "staker") ,
+  bonding_consumer_chains: [StakerAndConsumerChain!] @derivedFrom(field: "staker"),
   max_bonding_unlock_period: BigInt!,
   unbonding_unlock_time: BigInt!,
 }
@@ -45,8 +45,16 @@ type Validator @entity {
   delegator_count:Int!
   delegator_list_string: String!
   delegators: [Delegator!]! @derivedFrom(field: "select_validator")
+
+  bonding_consumer_chain_count: Int!
+  bonding_consumer_chains: [ValidatorAndConsumerChain!] @derivedFrom(field: "validator"),
   
   rewards: [ValidatorReward!] @derivedFrom(field: "validator")
+
+  increase_staking_amount: BigInt!
+  decrease_staking_amount: BigInt!
+  near_staking_reward_amount: BigInt!
+
 }
 
 type ValidatorReward @entity {
@@ -63,6 +71,10 @@ type Delegator @entity {
   share_balance: BigInt!
   staked_balance: BigInt!
   rewards: [DelegatorReward!] @derivedFrom(field: "delegator")
+
+  increase_staking_amount: BigInt!
+  decrease_staking_amount: BigInt!
+  near_staking_reward_amount: BigInt!
 }
 
 type DelegatorReward @entity {
@@ -75,7 +87,7 @@ type DelegatorReward @entity {
 type ConsumerChain @entity {
   id: ID!
   consumer_chain_id: String!,
-  unbond_period: BigInt!,
+  unbonding_period: BigInt!,
   website: String!,
   governance: String!,
   treasury: String!,
@@ -83,6 +95,7 @@ type ConsumerChain @entity {
   pos_account_id: String!,
   register_fee: BigInt!,
   stakers: [StakerAndConsumerChain!] @derivedFrom(field: "consumer_chain")
+  validators: [ValidatorAndConsumerChain!] @derivedFrom(field: "consumer_chain")
 }
 
 type StakerAndConsumerChain @entity {
@@ -92,6 +105,12 @@ type StakerAndConsumerChain @entity {
   key: String!
 }
 
+type ValidatorAndConsumerChain @entity {
+  id: ID!
+  validator: Validator!
+  consumer_chain: ConsumerChain!
+  key: String!
+}
 
 enum SlashStatus {
   Pending,
