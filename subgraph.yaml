@@ -4,13 +4,13 @@ schema:
 dataSources:
   - kind: near
     name: receipts
-    network: near-testnet
+    network: near-mainnet
     source:
       accounts:
         suffixes:
-          - "contract-5.lpos-market.testnet"
-          - "contract-5.restaking-base.testnet"
-      startBlock: 146278775
+          - "v1.restaking-base.near"
+          - "v1.lpos-market.near"
+      startBlock: 105088768
     mapping:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
