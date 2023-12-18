@@ -94,6 +94,9 @@ type ConsumerChain @entity {
   status: String!,
   pos_account_id: String!,
   register_fee: BigInt!,
+  
+  staker_count: Int!
+  staker_list_string: String!
   stakers: [StakerAndConsumerChain!] @derivedFrom(field: "consumer_chain")
   validators: [ValidatorAndConsumerChain!] @derivedFrom(field: "consumer_chain")
 }

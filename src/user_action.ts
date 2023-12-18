@@ -212,16 +212,20 @@ export class UserActionHelp {
 		user_action.save()
 	}
 
-	static new_update_consumer_chain_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
+	static new_update_consumer_chain_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): bool {
 		let user_action = this.new_user_action(action_types.update_consumer_chain_action, receipt, log_id)
 		let update_consumer_chain_action = new UpdateConsumerChainAction(user_action.id)
 
+		
+		let unbonding_period = data.getObj("consumer_chain_update_param")!.get("unbonding_period")
+		let is_update_unbonding_period =  unbonding_period?true:false
 		update_consumer_chain_action.param = data.getObj("consumer_chain_update_param")!.stringify()
 
 		update_consumer_chain_action.save()
 
 		user_action.update_consumer_chain_action = user_action.id
 		user_action.save()
+		return is_update_unbonding_period
 
 	}
 

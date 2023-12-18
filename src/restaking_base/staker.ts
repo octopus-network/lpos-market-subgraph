@@ -1,6 +1,6 @@
 import { JSON } from "assemblyscript-json";
-import { StakeAction, Staker, Validator, ValidatorAndConsumerChain } from "../../generated/schema";
-import { convertStringToBigInt } from "../util";
+import { ConsumerChain, StakeAction, Staker, Validator, ValidatorAndConsumerChain } from "../../generated/schema";
+import { convertStringToBigInt, remove_s_at_array } from "../util";
 import { StakerAndConsumerChainHelper } from "./staker_and_consumer_chain";
 import { ValidatorHelper } from "../lpos_market/validator";
 
@@ -41,6 +41,13 @@ export class StakerHelper {
 			validator.save()
 		}
 
+		let consumer_chain = ConsumerChain.load(consumer_chain_id)!
+		consumer_chain.staker_count +=1
+		let staker_list = consumer_chain.staker_list_string.split(",")
+		staker_list.push(staker_id)
+		consumer_chain.staker_list_string = staker_list.join(",")
+		consumer_chain.save()
+
 		return staker
 	}
 
@@ -48,13 +55,14 @@ export class StakerHelper {
 		let staker = Staker.load(staker_id)!
 		let cc_list = staker.bonding_consumer_chain_list_string.split(',')// (<JSON.Arr>(JSON.parse(validator.delegator_json))).valueOf();
 
-		let after_unbond_cc_list: Array<string> = []
-		for (let i = 0; i < cc_list.length; i++) {
-			let e = cc_list[i]
-			if (e.length > 0 && e != consumer_chain_id) {
-				after_unbond_cc_list.push(e)
-			}
-		}
+		let after_unbond_cc_list = remove_s_at_array(cc_list, consumer_chain_id)
+		// let after_unbond_cc_list: Array<string> = []
+		// for (let i = 0; i < cc_list.length; i++) {
+		// 	let e = cc_list[i]
+		// 	if (e.length > 0 && e != consumer_chain_id) {
+		// 		after_unbond_cc_list.push(e)
+		// 	}
+		// }
 
 		staker.bonding_consumer_chain_count -= 1
 		staker.bonding_consumer_chain_list_string = after_unbond_cc_list.join(',')
@@ -65,6 +73,13 @@ export class StakerHelper {
 			validator.bonding_consumer_chain_count -= 1
 			validator.save()
 		}
+
+		let consumer_chain = ConsumerChain.load(consumer_chain_id)!
+		consumer_chain.staker_count -=1
+		let staker_list = consumer_chain.staker_list_string.split(",")
+		staker_list = remove_s_at_array(staker_list, staker_id)
+		consumer_chain.staker_list_string = staker_list.join(",")
+		consumer_chain.save()
 
 		return staker
 	}

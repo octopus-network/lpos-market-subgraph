@@ -36,3 +36,13 @@ export function staked_balance_from_shares(
 
 	return (total_staked_balance.times(share_balance).div(total_share_balance)) 
 }
+
+export function remove_s_at_array(array: string[], rm: string): string[] {
+    let after_rm: string[] = []
+    for(let i = 0 ;i<array.length;i++) {
+        if(array[i] != rm) {
+            after_rm.push(array[i])
+        }
+    }
+    return after_rm
+}

@@ -136,7 +136,7 @@ function handleUnbondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log
 }
 
 function handleRegisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!)
+	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!, false)
 	UserActionHelp.new_register_consumer_chain_action(data, receipt, logIndex)
 	let summary = SummaryHelper.getOrNew()
 	summary.chain_count +=1
@@ -144,12 +144,12 @@ function handleRegisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptW
 }
 
 function handleUpdateConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!)
-	UserActionHelp.new_update_consumer_chain_action(data, receipt, logIndex)
+	let is_update_unbonding_period = UserActionHelp.new_update_consumer_chain_action(data, receipt, logIndex)
+	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!, is_update_unbonding_period)
 }
 
 function handleDeregisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
-	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!)
+	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!, false)
 	UserActionHelp.new_deregister_consumer_chain_action(data, receipt, logIndex)
 	let summary = SummaryHelper.getOrNew()
 	summary.chain_count -=1
