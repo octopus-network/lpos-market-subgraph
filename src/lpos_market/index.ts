@@ -128,8 +128,8 @@ function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 
 function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator_id = data.getObj("validator_info")!.getString("validator_id")!.valueOf()
-	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator_id);
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
+	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator_id);
 }
 
 function handleWithdrawInUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {

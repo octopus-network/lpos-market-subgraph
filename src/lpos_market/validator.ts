@@ -7,19 +7,29 @@ import { DelegatorHelper } from "./delegator";
 
 export class ValidatorHelper {
 
-	static updateReward(validator: Validator): Validator {
-		validator.near_staking_reward_amount = validator.staked_balance.plus(validator.decrease_staking_amount).minus(validator.increase_staking_amount)
+	static updateReward(validator: Validator, is_unstake: bool): Validator {
 
-		if(validator.near_staking_reward_amount.lt(BigInt.zero())) {
+		if (is_unstake) {
+			validator.near_staking_reward_amount = BigInt
+				.zero()
+				.plus(validator.decrease_staking_amount)
+				.minus(validator.increase_staking_amount)
+		} else {
+			validator.near_staking_reward_amount = validator.staked_balance
+				.plus(validator.decrease_staking_amount)
+				.minus(validator.increase_staking_amount)
+		}
+
+		if (validator.near_staking_reward_amount.lt(BigInt.zero())) {
 			validator.near_staking_reward_amount = BigInt.zero()
 		}
 		return validator
 	}
 
-	static stake(validator_info: JSON.Obj): Validator{
+	static stake(validator_info: JSON.Obj): Validator {
 		let validator = this.newOrUpdateByValidatorInfo(validator_info)
 		let staker = Staker.load(validator.escrow_id)!
-		staker.validator = validator.validator_id 
+		staker.validator = validator.validator_id
 		staker.save()
 
 		return validator
@@ -107,7 +117,7 @@ export class ValidatorHelper {
 		validator.increase_staking_amount = BigInt.zero()
 		validator.decrease_staking_amount = BigInt.zero()
 		validator.near_staking_reward_amount = BigInt.zero()
-		validator.status = "Destroyed" 
+		validator.status = "Destroyed"
 		validator.save()
 	}
 
@@ -119,7 +129,7 @@ export class ValidatorHelper {
 			validator.total_share_balance,
 			validator.share_balance
 		)
-		validator = ValidatorHelper.updateReward(validator)
+		validator = ValidatorHelper.updateReward(validator, false)
 
 		let delegator_list = validator.delegator_list_string.split(',');
 
@@ -143,7 +153,7 @@ export class ValidatorHelper {
 
 
 	static validator_and_consumer_chain_id(validator_id: string, consumer_chain_id: string): string {
-		return validator_id+'#'+consumer_chain_id
+		return validator_id + '#' + consumer_chain_id
 
 	}
 
@@ -159,7 +169,7 @@ export class ValidatorHelper {
 		validator_and_consumer_chain.save()
 	}
 
-	static unrestake(validator_id: string, consumer_chain_id: string): void{
+	static unrestake(validator_id: string, consumer_chain_id: string): void {
 		let validator_and_consumer_chain_id = ValidatorHelper.validator_and_consumer_chain_id(validator_id, consumer_chain_id)
 		store.remove("ValidatorAndConsumerChain", validator_and_consumer_chain_id);
 	}

@@ -290,7 +290,7 @@ export class UserActionHelp {
 		let validator = Validator.load(validator_id)!
 		validator.increase_staking_amount = validator.increase_staking_amount.plus(stake_action.amount)
 
-		validator = ValidatorHelper.updateReward(validator)
+		validator = ValidatorHelper.updateReward(validator, false)
 
 		validator.save()
 	}
@@ -312,7 +312,7 @@ export class UserActionHelp {
 		let validator = Validator.load(validator_id)!
 		validator.increase_staking_amount = validator.increase_staking_amount.plus(increase_stake_action.amount)
 
-		validator = ValidatorHelper.updateReward(validator)
+		validator = ValidatorHelper.updateReward(validator, false)
 
 		validator.save()
 	}
@@ -342,7 +342,7 @@ export class UserActionHelp {
 		let validator = Validator.load(validator_id)!
 		validator.decrease_staking_amount = validator.decrease_staking_amount.plus(decrease_stake_action.amount)
 
-		validator = ValidatorHelper.updateReward(validator)
+		validator = ValidatorHelper.updateReward(validator, false)
 
 		validator.save()
 	}
@@ -362,7 +362,7 @@ export class UserActionHelp {
 		let validator = Validator.load(validator_id)!
 		validator.decrease_staking_amount = validator.decrease_staking_amount.plus(validator.staked_balance)
 
-		validator = ValidatorHelper.updateReward(validator)
+		validator = ValidatorHelper.updateReward(validator, true)
 
 		validator.save()
 	}
