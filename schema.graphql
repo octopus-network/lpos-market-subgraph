@@ -484,6 +484,7 @@ type WithdrawAction @entity{
   withdrawal_certificate: String!
   amount: BigInt!
   withdrawal: Withdrawal!
+  beneficiary: String!
 }
 
 type WithdrawUnstakeAction @entity {
@@ -499,7 +500,8 @@ type DelegatorReceiveRewardAction @entity {
   token_id: String!
   amount: BigInt!
   receiver: String!
-  validator_id: String!
+  validator_id: String
+  share_balance: BigInt
 }
 
 type ValidatorReceiveRewardAction @entity {
@@ -507,6 +509,9 @@ type ValidatorReceiveRewardAction @entity {
   token_id: String!
   amount: BigInt!
   receiver: String!
+  reward_source: String
+  share_balance: BigInt
+  total_share_balance: BigInt
 }
 
 type DelegatorClaimRewardAction @entity {

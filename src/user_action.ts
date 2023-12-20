@@ -216,9 +216,9 @@ export class UserActionHelp {
 		let user_action = this.new_user_action(action_types.update_consumer_chain_action, receipt, log_id)
 		let update_consumer_chain_action = new UpdateConsumerChainAction(user_action.id)
 
-		
+
 		let unbonding_period = data.getObj("consumer_chain_update_param")!.get("unbonding_period")
-		let is_update_unbonding_period =  unbonding_period?true:false
+		let is_update_unbonding_period = unbonding_period ? true : false
 		update_consumer_chain_action.param = data.getObj("consumer_chain_update_param")!.stringify()
 
 		update_consumer_chain_action.save()
@@ -280,7 +280,7 @@ export class UserActionHelp {
 		stake_action.pool_id = data.getString("select_pool_id")!.valueOf()
 		stake_action.amount = BigInt.fromString(data.getString("stake_amount")!.valueOf())
 		stake_action.shares = BigInt.fromString(data.getString("increase_shares")!.valueOf())
-		stake_action.validator_id = validator_id 
+		stake_action.validator_id = validator_id
 
 		stake_action.save()
 
@@ -367,7 +367,7 @@ export class UserActionHelp {
 		validator.save()
 	}
 
-	static new_destroy_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string ): void {
+	static new_destroy_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number, validator_id: string): void {
 		let user_action = this.new_user_action(action_types.destroy_action, receipt, log_id)
 		user_action.user_id = validator_id
 		let destroy_action = new DestroyAction(user_action.id)
@@ -415,10 +415,10 @@ export class UserActionHelp {
 		user_action.save()
 	}
 	static new_delegate_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number, 
-		validator_id: string, 
+		data: JSON.Obj,
+		receipt: near.ReceiptWithOutcome,
+		log_id: number,
+		validator_id: string,
 		delegator: Delegator
 	): void {
 		let user_action = this.new_user_action(action_types.delegate_action, receipt, log_id)
@@ -434,17 +434,17 @@ export class UserActionHelp {
 		user_action.save()
 
 		delegator.increase_staking_amount = delegator
-		.increase_staking_amount
-		.plus(delegate_action.amount)
+			.increase_staking_amount
+			.plus(delegate_action.amount)
 
 		delegator = DelegatorHelper.updateReward(delegator)
 
 		delegator.save()
 	}
 	static new_increase_delegation_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number, 
+		data: JSON.Obj,
+		receipt: near.ReceiptWithOutcome,
+		log_id: number,
 		validator_id: string,
 		delegator: Delegator
 	): void {
@@ -460,8 +460,8 @@ export class UserActionHelp {
 		user_action.save()
 
 		delegator.increase_staking_amount = delegator
-		.increase_staking_amount
-		.plus(increase_delegation_action.amount)
+			.increase_staking_amount
+			.plus(increase_delegation_action.amount)
 
 		delegator = DelegatorHelper.updateReward(delegator)
 
@@ -469,9 +469,9 @@ export class UserActionHelp {
 	}
 
 	static new_decrease_delegation_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number, 
+		data: JSON.Obj,
+		receipt: near.ReceiptWithOutcome,
+		log_id: number,
 		validator_id: string,
 		delegator: Delegator
 	): UserAction {
@@ -496,8 +496,8 @@ export class UserActionHelp {
 
 
 		delegator.increase_staking_amount = delegator
-		.increase_staking_amount
-		.plus(decrease_delegation_action.amount)
+			.increase_staking_amount
+			.plus(decrease_delegation_action.amount)
 
 		delegator = DelegatorHelper.updateReward(delegator)
 
@@ -533,20 +533,20 @@ export class UserActionHelp {
 		withdrawal.save()
 		return user_action
 	}
-	
+
 	static new_undelegate_in_unstake_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
-		log_id: number, 
+		data: JSON.Obj,
+		receipt: near.ReceiptWithOutcome,
+		log_id: number,
 		delegator_id: string,
 		validator_id: string
-		): void {
+	): void {
 		let user_action = this.new_user_action(action_types.undelegate_in_unstake_action, receipt, log_id)
 		user_action.user_id = delegator_id
 		let undelegate_in_unstake_action = new UndelegateInUnstakeAction(user_action.id)
 		undelegate_in_unstake_action.amount = BigInt.fromString(data.getString("undelegate_amount")!.valueOf())
 		undelegate_in_unstake_action.shares = BigInt.fromString(data.getString("undelegate_shares")!.valueOf())
-		undelegate_in_unstake_action.validator_id = validator_id 
+		undelegate_in_unstake_action.validator_id = validator_id
 		undelegate_in_unstake_action.save()
 
 		user_action.undelegate_in_unstake_action = undelegate_in_unstake_action.id
@@ -564,20 +564,22 @@ export class UserActionHelp {
 		withdraw_action.withdrawal_certificate = withdrawal_certificate
 		withdraw_action.amount = withdrawal.amount
 		withdraw_action.withdrawal = withdraw_action.withdrawal_certificate
+		withdraw_action.beneficiary = withdrawal.beneficiary
 
 		withdraw_action.save()
 
 		withdrawal.withdraw_action = user_action.id
 		withdrawal.save()
 
+		user_action.user_id = withdrawal.beneficiary
 		user_action.withdraw_action = user_action.id
 		user_action.save()
 		return user_action
 	}
 
 	static new_withdraw_unstake_action(
-		data: JSON.Obj, 
-		receipt: near.ReceiptWithOutcome, 
+		data: JSON.Obj,
+		receipt: near.ReceiptWithOutcome,
 		log_id: number,
 		validator_id: string,
 		unstake_withdrawal_certificate: string
@@ -592,7 +594,7 @@ export class UserActionHelp {
 		withdraw_unstake_action.withdrawal = withdrawal_certificate
 		withdraw_unstake_action.validator_id = validator_id
 		withdraw_unstake_action.save()
-		
+
 
 		user_action.withdraw_unstake_action = withdraw_unstake_action.id
 		user_action.save()
@@ -600,7 +602,7 @@ export class UserActionHelp {
 		let withdrawal = Withdrawal.load(withdrawal_certificate)!
 		withdrawal.withdraw_action = user_action.id
 		withdrawal.save()
-		
+
 	}
 
 	static new_delegator_receive_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
@@ -609,10 +611,23 @@ export class UserActionHelp {
 		delegator_receive_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
 		delegator_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		delegator_receive_reward_action.receiver = data.getString("delegator_id")!.valueOf()
+		if(data.getString("validator_id")) {
+			delegator_receive_reward_action.validator_id = data.getString("validator_id")!.valueOf()
+		}
+
+		if(data.getString("share_balance")) {
+			delegator_receive_reward_action.share_balance = BigInt.fromString(data.getString("share_balance")!.valueOf())
+		}
 
 		let delegator = Delegator.load(delegator_receive_reward_action.receiver)!
 
-		delegator_receive_reward_action.validator_id = delegator.select_validator! 
+		if (data.getString("validator_id")) {
+			delegator_receive_reward_action.validator_id = data.getString("validator_id")!.valueOf()
+		} else {
+			if (delegator.select_validator) {
+				delegator_receive_reward_action.validator_id = delegator.select_validator!
+			}
+		}
 
 		delegator_receive_reward_action.save()
 
@@ -626,6 +641,15 @@ export class UserActionHelp {
 		validator_receive_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
 		validator_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		validator_receive_reward_action.receiver = data.getString("validator_id")!.valueOf()
+
+		if(data.getString("share_balance")) {
+			validator_receive_reward_action.share_balance = BigInt.fromString(data.getString("share_balance")!.valueOf())
+		}
+
+		if(data.getString("total_share_balance")) {
+			validator_receive_reward_action.total_share_balance = BigInt.fromString(data.getString("total_share_balance")!.valueOf())
+		}
+
 
 		validator_receive_reward_action.save()
 
