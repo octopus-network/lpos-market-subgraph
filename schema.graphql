@@ -133,7 +133,9 @@ type Summary @entity {
   id: ID!
   chain_count: Int!
   staker_count: Int!
+  # only sum staking validator
   validator_count: Int!
+  all_validator_count: Int!
   delegator_count: Int!
   total_staked_near: BigInt!
   staking_pool_list: String!

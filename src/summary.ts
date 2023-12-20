@@ -10,6 +10,7 @@ export class SummaryHelper {
 		summary.chain_count = 0
 		summary.staker_count = 0
 		summary.validator_count = 0
+		summary.all_validator_count = 0
 		summary.delegator_count = 0
 		summary.staking_pool_list = ""
 		summary.total_staked_near = BigInt.zero()
