@@ -26,7 +26,7 @@ export class StakerAndConsumerChainHelper {
 			let v_c_id = this.get_id(staker.validator!, consumer_chain_id)
 			let validatorAndConsumerChain = ValidatorAndConsumerChain.load(v_c_id)
 			if (!validatorAndConsumerChain) {
-				validatorAndConsumerChain = new ValidatorAndConsumerChain(id)
+				validatorAndConsumerChain = new ValidatorAndConsumerChain(v_c_id)
 			}
 			validatorAndConsumerChain.validator = staker.validator!
 			validatorAndConsumerChain.consumer_chain = consumer_chain_id

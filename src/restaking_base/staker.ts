@@ -56,13 +56,6 @@ export class StakerHelper {
 		let cc_list = staker.bonding_consumer_chain_list_string.split(',')// (<JSON.Arr>(JSON.parse(validator.delegator_json))).valueOf();
 
 		let after_unbond_cc_list = remove_s_at_array(cc_list, consumer_chain_id)
-		// let after_unbond_cc_list: Array<string> = []
-		// for (let i = 0; i < cc_list.length; i++) {
-		// 	let e = cc_list[i]
-		// 	if (e.length > 0 && e != consumer_chain_id) {
-		// 		after_unbond_cc_list.push(e)
-		// 	}
-		// }
 
 		staker.bonding_consumer_chain_count -= 1
 		staker.bonding_consumer_chain_list_string = after_unbond_cc_list.join(',')
