@@ -611,6 +611,7 @@ export class UserActionHelp {
 		delegator_receive_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
 		delegator_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		delegator_receive_reward_action.receiver = data.getString("delegator_id")!.valueOf()
+		delegator_receive_reward_action.timestamp = user_action.timestamp
 		if(data.getString("validator_id")) {
 			delegator_receive_reward_action.validator_id = data.getString("validator_id")!.valueOf()
 		}
@@ -641,6 +642,7 @@ export class UserActionHelp {
 		validator_receive_reward_action.token_id = data.getString("reward_token_id")!.valueOf()
 		validator_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		validator_receive_reward_action.receiver = data.getString("validator_id")!.valueOf()
+		validator_receive_reward_action.timestamp = user_action.timestamp
 
 		if(data.getString("share_balance")) {
 			validator_receive_reward_action.share_balance = BigInt.fromString(data.getString("share_balance")!.valueOf())

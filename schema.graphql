@@ -50,6 +50,7 @@ type Validator @entity {
   bonding_consumer_chains: [ValidatorAndConsumerChain!] @derivedFrom(field: "validator"),
   
   rewards: [ValidatorReward!] @derivedFrom(field: "validator")
+  total_rewards: [ValidatorTotalReward!] @derivedFrom(field: "validator")
 
   increase_staking_amount: BigInt!
   decrease_staking_amount: BigInt!
@@ -64,6 +65,13 @@ type ValidatorReward @entity {
   reward_token_amount: BigInt!
 }
 
+type ValidatorTotalReward @entity {
+  id: ID!
+  validator: Validator!
+  reward_token_id: String!
+  reward_token_amount: BigInt!
+}
+
 type Delegator @entity {
 	id: ID!
   delegator_id: String!
@@ -71,6 +79,7 @@ type Delegator @entity {
   share_balance: BigInt!
   staked_balance: BigInt!
   rewards: [DelegatorReward!] @derivedFrom(field: "delegator")
+  total_rewards: [DelegatorTotalReward!] @derivedFrom(field: "delegator")
 
   increase_staking_amount: BigInt!
   decrease_staking_amount: BigInt!
@@ -80,6 +89,13 @@ type Delegator @entity {
 type DelegatorReward @entity {
   id: ID!
   delegator: Delegator
+  reward_token_id: String!
+  reward_token_amount: BigInt!
+}
+
+type DelegatorTotalReward @entity {
+  id: ID!
+  delegator: Delegator!
   reward_token_id: String!
   reward_token_amount: BigInt!
 }
@@ -504,6 +520,7 @@ type DelegatorReceiveRewardAction @entity {
   receiver: String!
   validator_id: String
   share_balance: BigInt
+  timestamp: BigInt!
 }
 
 type ValidatorReceiveRewardAction @entity {
@@ -514,6 +531,7 @@ type ValidatorReceiveRewardAction @entity {
   reward_source: String
   share_balance: BigInt
   total_share_balance: BigInt
+  timestamp: BigInt!
 }
 
 type DelegatorClaimRewardAction @entity {
