@@ -227,6 +227,11 @@ enum ActionType {
   delegator_claim_reward_action,
   validator_claim_reward_action,
 
+  # reward
+  octopus_receive_reward_action
+  receive_anchor_reward_action,
+  validator_receive_anchor_reward_action,
+
   #registry 
   register_consumer_chain_in_lpos_market_action,
   
@@ -295,6 +300,11 @@ type UserAction @entity {
 
   delegator_claim_reward_action: DelegatorClaimRewardAction,
   validator_claim_reward_action: ValidatorClaimRewardAction,
+
+  # reward
+  octopus_receive_reward_action: OctopusReceiveRewardAction, 
+  receive_anchor_reward_action: ReceiveAnchorRewardAction ,
+  validator_receive_anchor_reward_action: ValidatorReceiveAnchorRewardAction ,
 
   # registry
   register_consumer_chain_in_lpos_market_action: RegisterConsumerChainInLposMarketAction,
@@ -520,7 +530,12 @@ type DelegatorReceiveRewardAction @entity {
   receiver: String!
   validator_id: String
   share_balance: BigInt
+  total_share_balance: BigInt
+  reward_uuid: BigInt
+  validator_commission_rate: BigInt
+
   timestamp: BigInt!
+  user_action: UserAction!
 }
 
 type ValidatorReceiveRewardAction @entity {
@@ -531,7 +546,21 @@ type ValidatorReceiveRewardAction @entity {
   reward_source: String
   share_balance: BigInt
   total_share_balance: BigInt
+  reward_uuid: BigInt
+  validator_commission_rate: BigInt
+
   timestamp: BigInt!
+  user_action: UserAction!
+}
+
+type OctopusReceiveRewardAction @entity {
+  id: ID!
+  token_id: String!
+  amount: BigInt!
+  reward_uuid: BigInt
+
+  timestamp: BigInt!
+  user_action: UserAction!
 }
 
 type DelegatorClaimRewardAction @entity {
@@ -546,4 +575,29 @@ type ValidatorClaimRewardAction @entity {
   token_id: String!
   amount: BigInt
   receiver: String!
+}
+
+type ReceiveAnchorRewardAction @entity {
+  id: ID!
+  consumer_chain_id: String!
+  anchor_id: String!
+  token_id: String!
+  amount: BigInt!
+  validator_set: String!
+  sequence: BigInt!
+  reward_uuid: BigInt!
+  user_action: UserAction!
+}
+
+type ValidatorReceiveAnchorRewardAction @entity {
+  id: ID!
+  consumer_chain_id: String!
+  anchor_id: String!
+  token_id: String!
+  amount: BigInt!
+  validator_id: String!
+  sequence: BigInt!
+  reward_uuid: BigInt!
+  validator_commission_rate: BigInt!
+  user_action: UserAction!
 }

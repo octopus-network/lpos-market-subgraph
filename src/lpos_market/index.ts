@@ -41,6 +41,9 @@ export function handleLposMarketEvent(eventObj: JSON.Obj, receipt: near.ReceiptW
 		handleDelegatorReceiveRewardEvent(objInData, receipt, logIndex);
 	} else if (event == "validator_receive_reward") {
 		handleValidatorReceiveRewardEvent(objInData, receipt, logIndex)
+	} else if (event == "octopus_receive_reward") {
+		handleOctopusReceiveRewardEvent(objInData, receipt, logIndex)
+
 	} else if (event == "delegator_claim_reward") {
 		handleDelegatorClaimRewardEvent(objInData, receipt, logIndex)
 	} else if (event == "validator_claim_reward") {
@@ -51,6 +54,10 @@ export function handleLposMarketEvent(eventObj: JSON.Obj, receipt: near.ReceiptW
 		handleUnrestakeEvent(objInData, receipt, logIndex)
 	}  else if (event == "change_key") {
 		handleChangeKeyEvent(objInData, receipt, logIndex)
+	} else if (event == "receive_anchor_reward") {
+		handleReceiveAnchorRewardEvent(objInData, receipt, logIndex)
+	} else if (event == "validator_receive_anchor_reward") {
+		handleValidatorReceiveAnchorRewardEvent(objInData, receipt, logIndex)
 	} 
 }
 
@@ -242,6 +249,10 @@ function handleValidatorReceiveRewardEvent(data: JSON.Obj, receipt: near.Receipt
 	UserActionHelp.new_validator_receive_reward_action(data, receipt, logIndex)
 }
 
+function handleOctopusReceiveRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_octopus_receive_reward_action(data, receipt, logIndex)
+}
+
 function handleDelegatorClaimRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	UserActionHelp.new_delegator_claim_reward_action(data, receipt, logIndex)
 	let delegator_id = data.getString("delegator_id")!.valueOf()
@@ -281,4 +292,12 @@ function handleChangeKeyEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, 
 	let consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
 	let key = data.getString("key")!.valueOf()
 	// ValidatorHelper.change_key(validator_id, consumer_chain_id, key)
+}
+
+function handleReceiveAnchorRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_receive_anchor_reward_action(data, receipt, logIndex)
+}
+
+function handleValidatorReceiveAnchorRewardEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+	UserActionHelp.new_validator_receive_anchor_reward_action(data, receipt, logIndex)
 }
