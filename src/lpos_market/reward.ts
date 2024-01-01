@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Delegator, DelegatorReward, DelegatorTotalReward, ValidatorReward, ValidatorTotalReward } from "../../generated/schema";
+import { Delegator, DelegatorReward, DelegatorTotalReward, DelegatorsUnclaimReward, ValidatorReward, ValidatorTotalReward, ValidatorsUnclaimReward } from "../../generated/schema";
 
 export class RewardHelper {
 
@@ -34,6 +34,15 @@ export class RewardHelper {
 		delegator_total_reward.reward_token_amount = reward_token_amount.plus(delegator_total_reward.reward_token_amount)
 
 		delegator_total_reward.save()
+
+		let delegators_unclaim_rewards = DelegatorsUnclaimReward.load(reward_token_id) 
+		if(!delegators_unclaim_rewards) {
+			delegators_unclaim_rewards = new DelegatorsUnclaimReward(reward_token_id);
+			delegators_unclaim_rewards.reward_token_id = reward_token_id
+			delegators_unclaim_rewards.reward_token_amount = BigInt.zero()
+		}
+		delegators_unclaim_rewards.reward_token_amount = reward_token_amount.plus(delegators_unclaim_rewards.reward_token_amount)
+		delegators_unclaim_rewards.save()
 	}
 
 	static validatorReceiveReward(validator_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
@@ -62,6 +71,15 @@ export class RewardHelper {
 		validator_total_reward.reward_token_amount = reward_token_amount.plus(validator_total_reward.reward_token_amount) 
 
 		validator_total_reward.save()
+
+		let validators_unclaim_rewards = ValidatorsUnclaimReward.load(reward_token_id) 
+		if(!validators_unclaim_rewards) {
+			validators_unclaim_rewards = new ValidatorsUnclaimReward(reward_token_id);
+			validators_unclaim_rewards.reward_token_id = reward_token_id
+			validators_unclaim_rewards.reward_token_amount = BigInt.zero()
+		}
+		validators_unclaim_rewards.reward_token_amount = reward_token_amount.plus(validators_unclaim_rewards.reward_token_amount)
+		validators_unclaim_rewards.save()
 	}
 
 	static delegatorClaimReward(delegator_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
@@ -71,6 +89,10 @@ export class RewardHelper {
 
 		delegator_reward.save()
 
+		let delegators_unclaim_rewards = DelegatorsUnclaimReward.load(reward_token_id)! 
+		delegators_unclaim_rewards.reward_token_amount = delegators_unclaim_rewards.reward_token_amount.minus(reward_token_amount)
+		delegators_unclaim_rewards.save()
+
 	}
 
 	static validatorClaimReward(validator_id: string, reward_token_id: string, reward_token_amount: BigInt): void {
@@ -79,6 +101,10 @@ export class RewardHelper {
 		validator_reward.reward_token_amount = validator_reward.reward_token_amount.minus(reward_token_amount) 
 
 		validator_reward.save()
+
+		let validators_unclaim_rewards = ValidatorsUnclaimReward.load(reward_token_id)! 
+		validators_unclaim_rewards.reward_token_amount = validators_unclaim_rewards.reward_token_amount.minus(reward_token_amount)
+		validators_unclaim_rewards.save()
 	}
 
 }

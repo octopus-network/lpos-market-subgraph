@@ -43,7 +43,6 @@ export function handleLposMarketEvent(eventObj: JSON.Obj, receipt: near.ReceiptW
 		handleValidatorReceiveRewardEvent(objInData, receipt, logIndex)
 	} else if (event == "octopus_receive_reward") {
 		handleOctopusReceiveRewardEvent(objInData, receipt, logIndex)
-
 	} else if (event == "delegator_claim_reward") {
 		handleDelegatorClaimRewardEvent(objInData, receipt, logIndex)
 	} else if (event == "validator_claim_reward") {

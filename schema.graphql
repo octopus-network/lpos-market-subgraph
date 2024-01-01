@@ -72,6 +72,13 @@ type ValidatorTotalReward @entity {
   reward_token_amount: BigInt!
 }
 
+type ValidatorsUnclaimReward @entity {
+  id: ID!
+  reward_token_id: String!
+  reward_token_amount: BigInt!
+}
+
+
 type Delegator @entity {
 	id: ID!
   delegator_id: String!
@@ -96,6 +103,12 @@ type DelegatorReward @entity {
 type DelegatorTotalReward @entity {
   id: ID!
   delegator: Delegator!
+  reward_token_id: String!
+  reward_token_amount: BigInt!
+}
+
+type DelegatorsUnclaimReward @entity {
+  id: ID!
   reward_token_id: String!
   reward_token_amount: BigInt!
 }
