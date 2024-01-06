@@ -86,6 +86,8 @@ export class StakerHelper {
 		}
 		staker.bonding_consumer_chain_count = 0
 		staker.bonding_consumer_chain_list_string = [].join(',')
+		staker.select_staking_pool = null
+		staker.select_staking_pool_id = null
 		staker.save()
 
 		if(staker.validator) {
