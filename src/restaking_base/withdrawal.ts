@@ -13,6 +13,7 @@ export class WithdrawalHelper {
 		unlock_time: BigInt,
 		beneficiary: string,
 		create_action: string,
+		unstake_batch_id: string | null,
 	): Withdrawal {
 
 
@@ -27,6 +28,7 @@ export class WithdrawalHelper {
 		withdrawal.beneficiary = beneficiary
 		withdrawal.create_action = create_action
 		withdrawal.is_withdrawn = false
+		withdrawal.unstake_batch_id = unstake_batch_id
 
 		withdrawal.save()
 		return withdrawal
@@ -41,7 +43,8 @@ export class WithdrawalHelper {
 			BigInt.fromString(data.getString("unlock_epoch")!.valueOf()),
 			BigInt.fromString(data.getString("unlock_time")!.valueOf()),
 			data.getString("beneficiary")!.valueOf(),
-			create_action
+			create_action,
+			data.getString("unstake_batch_id")?data.getString("unstake_batch_id")!.valueOf():null
 		)
 	}
 
