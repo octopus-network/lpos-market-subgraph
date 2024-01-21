@@ -4,10 +4,11 @@ import { StakerHelper } from "./staker";
 import { StakingPoolHelper } from "./staking_pool";
 import { UserActionHelp } from "../user_action";
 import { ConsumerChainHelper } from "./consumer_chain";
-import { StakerAndConsumerChain, WithdrawAction } from "../../generated/schema";
+import { StakerAndConsumerChain, SubmittedUnstakeBatch, WithdrawAction } from "../../generated/schema";
 import { StakerAndConsumerChainHelper } from "./staker_and_consumer_chain";
 import { WithdrawalHelper } from "./withdrawal";
 import { SummaryHelper } from "../summary";
+import { SubmittedUnstakeBatchHelper } from "./unstake_batch";
 
 
 export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
@@ -26,11 +27,11 @@ export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.Recei
 		handleDecreaseStakeEvent(objInData, receipt, logIndex, version);
 	} else if (event == "staker_unstake") {
 		handleUnstakeEvent(objInData, receipt, logIndex, version);
-	} else if (event =="staker_bond") {
+	} else if (event == "staker_bond") {
 		handleBondEvent(objInData, receipt, logIndex);
-	} else if (event =="staker_unbond") {
+	} else if (event == "staker_unbond") {
 		handleUnbondEvent(objInData, receipt, logIndex);
-	} else if (event =="staker_change_key") {
+	} else if (event == "staker_change_key") {
 		handleChangeKeyEvent(objInData, receipt, logIndex);
 	} else if (event == "register_consumer_chain") {
 		handleRegisterConsumerChainEvent(objInData, receipt, logIndex);
@@ -42,6 +43,10 @@ export function handleRestakingBaseEvent(eventObj: JSON.Obj, receipt: near.Recei
 		handleRequestSlashEvent(objInData, receipt, logIndex);
 	} else if (event == "withdraw") {
 		handleWithdrawEvent(objInData, receipt, logIndex)
+	} else if (event == "withdraw_unstake_batch") {
+		handleWithdrawUnstakeBatchEvent(objInData, receipt, logIndex);
+	} else if (event == "submit_unstake_batch") {
+		handleSubmitUnstakeBatchEvent(objInData, receipt, logIndex);
 	}
 }
 
@@ -100,7 +105,7 @@ function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, lo
 		user_action.id
 	)
 	let summary = SummaryHelper.updateTotalStake()
-	summary.staker_count -=1
+	summary.staker_count -= 1
 	summary.save()
 }
 
@@ -113,7 +118,7 @@ function handleBondEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 	StakerHelper.bond(staker_id, consumer_chain_id)
 
 	UserActionHelp.new_staker_bond_action(data, receipt, logIndex)
-	
+
 }
 
 function handleChangeKeyEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -139,7 +144,7 @@ function handleRegisterConsumerChainEvent(data: JSON.Obj, receipt: near.ReceiptW
 	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!, false)
 	UserActionHelp.new_register_consumer_chain_action(data, receipt, logIndex)
 	let summary = SummaryHelper.getOrNew()
-	summary.chain_count +=1
+	summary.chain_count += 1
 	summary.save()
 }
 
@@ -152,7 +157,7 @@ function handleDeregisterConsumerChainEvent(data: JSON.Obj, receipt: near.Receip
 	ConsumerChainHelper.newOrUpdateByConsumerChainInfo(data.getObj("consumer_chain_info")!, false)
 	UserActionHelp.new_deregister_consumer_chain_action(data, receipt, logIndex)
 	let summary = SummaryHelper.getOrNew()
-	summary.chain_count -=1
+	summary.chain_count -= 1
 	summary.save()
 }
 
@@ -162,10 +167,46 @@ function handleRequestSlashEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcom
 
 function handleWithdrawEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 
-	let withdrawal_certificate = data.getString("withdraw_certificate")?
-	data.getString("withdraw_certificate")!.valueOf():
-	data.getString("withdrawal_certificate")!.valueOf()
-	
+	let withdrawal_certificate = data.getString("withdraw_certificate") ?
+		data.getString("withdraw_certificate")!.valueOf() :
+		data.getString("withdrawal_certificate")!.valueOf()
+
 	let user_action = UserActionHelp.new_withdraw_action(data, receipt, logIndex)
 	WithdrawalHelper.withdraw(withdrawal_certificate, user_action.id)
+}
+
+function handleWithdrawUnstakeBatchEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+
+	let user_action = UserActionHelp.new_withdraw_unstake_batch_action(data, receipt, logIndex)
+
+	let unstake_batch_id = data.getString("unstake_batch_id")!.valueOf();
+	let submitted_unstake_batch = SubmittedUnstakeBatch.load(unstake_batch_id)
+
+	if (submitted_unstake_batch) {
+		submitted_unstake_batch.is_withdrawn = true
+		submitted_unstake_batch.withdraw_unstake_batch_action = user_action.id
+
+		submitted_unstake_batch.save()
+	}
+}
+
+function handleSubmitUnstakeBatchEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
+
+	if (data.getString("pool_id")) {
+		let pool_id = data.getString("pool_id")!.valueOf()
+		let submitted_unstake_batch = SubmittedUnstakeBatchHelper.newFromJsonData(data.getObj("submitted_unstake_batch")!, pool_id)
+		let user_action = UserActionHelp.new_submit_unstake_batch_action(
+			pool_id,
+			submitted_unstake_batch.id,
+			receipt,
+			logIndex
+		)
+		submitted_unstake_batch.submit_unstake_batch_action = user_action.id
+		submitted_unstake_batch.save()
+
+	}
+
+
+
+
 }

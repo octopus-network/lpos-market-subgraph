@@ -1,6 +1,6 @@
 import { BigInt, log, near } from "@graphprotocol/graph-ts";
 import { JSON } from "assemblyscript-json";
-import { ChangeKeyAction, DecreaseDelegationAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseStakeAction, OctopusReceiveRewardAction, PingAction, ReceiveAnchorRewardAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnstakeAction, UpdateConsumerChainAction, UserAction, Validator, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveAnchorRewardAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnstakeAction, Withdrawal } from "../generated/schema";
+import { ChangeKeyAction, DecreaseDelegationAction, DecreaseStakeAction, DelegateAction, Delegator, DelegatorClaimRewardAction, DelegatorReceiveRewardAction, DeployAction, DeregisterConsumerChainAction, DestroyAction, IncreaseDelegationAction, IncreaseStakeAction, OctopusReceiveRewardAction, PingAction, ReceiveAnchorRewardAction, RegisterConsumerChainAction, RegisterConsumerChainInLposMarketAction, RequestSlashAction, RestakeAction, StakeAction, StakerAndConsumerChain, StakerBondAction, StakerChangeKeyAction, StakerDecreaseStakeAction, StakerIncreaseStakeAction, StakerStakeAction, StakerUnbondAction, StakerUnstakeAction, SubmitUnstakeBatchAction, UndelegateAction, UndelegateInUnstakeAction, UnrestakeAction, UnstakeAction, UpdateConsumerChainAction, UserAction, Validator, ValidatorClaimRewardAction, ValidatorPingAction, ValidatorReceiveAnchorRewardAction, ValidatorReceiveRewardAction, WithdrawAction, WithdrawUnstakeAction, WithdrawUnstakeBatchAction, Withdrawal } from "../generated/schema";
 import { ValidatorHelper } from "./lpos_market/validator";
 import { DelegatorHelper } from "./lpos_market/delegator";
 
@@ -11,6 +11,9 @@ export namespace action_types {
 	export type ActionType = string
 
 	export const ping_action = 'ping_action'
+	export const withdraw_unstake_batch_action = 'withdraw_unstake_batch_action'
+	export const submit_unstake_batch_action = 'submit_unstake_batch_action'
+
 	export const staker_stake_action = 'staker_stake_action'
 	export const staker_increase_stake_action = 'staker_increase_stake_action'
 	export const staker_decrease_stake_action = 'staker_decrease_stake_action'
@@ -609,6 +612,38 @@ export class UserActionHelp {
 
 	}
 
+	static new_withdraw_unstake_batch_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): UserAction {
+		let user_action = this.new_user_action(action_types.withdraw_unstake_batch_action, receipt, log_id)
+		let withdraw_unstake_batch_action = new WithdrawUnstakeBatchAction(user_action.id)
+		if (data.getString("pool_id")) {
+			withdraw_unstake_batch_action.pool_id = data.getString("pool_id")!.valueOf()
+		}
+		withdraw_unstake_batch_action.unstake_batch_id = data.getString("unstake_batch_id")!.valueOf()
+		withdraw_unstake_batch_action.save()
+
+		user_action.withdraw_unstake_batch_action = withdraw_unstake_batch_action.id
+		user_action.save()
+
+		return user_action
+	}
+
+	static new_submit_unstake_batch_action(pool_id: string | null, unstake_batch_id: string, receipt: near.ReceiptWithOutcome, log_id: number): UserAction {
+		let user_action = this.new_user_action(action_types.submit_unstake_batch_action, receipt, log_id)
+		let submit_unstake_batch_action = new SubmitUnstakeBatchAction(user_action.id)
+
+		submit_unstake_batch_action.submitted_unstake_batch = unstake_batch_id
+		submit_unstake_batch_action.pool_id = pool_id
+
+		submit_unstake_batch_action.save()
+
+		user_action.submit_unstake_batch_action = submit_unstake_batch_action.id
+
+		user_action.save()
+
+		return user_action
+
+	}
+
 	static new_delegator_receive_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.delegator_receive_reward_action, receipt, log_id)
 		let delegator_receive_reward_action = new DelegatorReceiveRewardAction(user_action.id)
@@ -616,23 +651,23 @@ export class UserActionHelp {
 		delegator_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		delegator_receive_reward_action.receiver = data.getString("delegator_id")!.valueOf()
 		delegator_receive_reward_action.timestamp = user_action.timestamp
-		if(data.getString("validator_id")) {
+		if (data.getString("validator_id")) {
 			delegator_receive_reward_action.validator_id = data.getString("validator_id")!.valueOf()
 		}
 
-		if(data.getString("share_balance")) {
+		if (data.getString("share_balance")) {
 			delegator_receive_reward_action.share_balance = BigInt.fromString(data.getString("share_balance")!.valueOf())
 		}
 
-		if(data.getString("total_share_balance")) {
+		if (data.getString("total_share_balance")) {
 			delegator_receive_reward_action.total_share_balance = BigInt.fromString(data.getString("total_share_balance")!.valueOf())
 		}
 
-		if(data.getString("reward_uuid")) {
+		if (data.getString("reward_uuid")) {
 			delegator_receive_reward_action.reward_uuid = BigInt.fromString(data.getString("reward_uuid")!.valueOf())
 		}
 
-		if(data.get("validator_commission_rate")) {
+		if (data.get("validator_commission_rate")) {
 			delegator_receive_reward_action.validator_commission_rate = BigInt.fromI64(data.getInteger("validator_commission_rate")!.valueOf())
 		}
 
@@ -661,25 +696,25 @@ export class UserActionHelp {
 		validator_receive_reward_action.receiver = data.getString("validator_id")!.valueOf()
 		validator_receive_reward_action.timestamp = user_action.timestamp
 
-		if(data.getString("share_balance")) {
+		if (data.getString("share_balance")) {
 			validator_receive_reward_action.share_balance = BigInt.fromString(data.getString("share_balance")!.valueOf())
 		}
 
-		if(data.getString("total_share_balance")) {
+		if (data.getString("total_share_balance")) {
 			validator_receive_reward_action.total_share_balance = BigInt.fromString(data.getString("total_share_balance")!.valueOf())
 		}
 
-		if(data.getString("reward_uuid")) {
+		if (data.getString("reward_uuid")) {
 			validator_receive_reward_action.reward_uuid = BigInt.fromString(data.getString("reward_uuid")!.valueOf())
 		}
 
-		if(data.get("validator_commission_rate")) {
+		if (data.get("validator_commission_rate")) {
 			validator_receive_reward_action.validator_commission_rate = BigInt.fromI64(data.getInteger("validator_commission_rate")!.valueOf())
 		}
 
-		if(data.get("reward_source")) {
+		if (data.get("reward_source")) {
 			validator_receive_reward_action.reward_source = data.getString("reward_source")!.valueOf()
-			if(validator_receive_reward_action.reward_source === "ValidatorShared") {
+			if (validator_receive_reward_action.reward_source === "ValidatorShared") {
 				validator_receive_reward_action.reward_source = "ValidatorCommission"
 			}
 		}
@@ -698,7 +733,7 @@ export class UserActionHelp {
 		octopus_receive_reward_action.amount = BigInt.fromString(data.getString("reward_token_amount")!.valueOf())
 		octopus_receive_reward_action.timestamp = user_action.timestamp
 
-		if(data.getString("reward_uuid")) {
+		if (data.getString("reward_uuid")) {
 			octopus_receive_reward_action.reward_uuid = BigInt.fromString(data.getString("reward_uuid")!.valueOf())
 		}
 
@@ -735,7 +770,7 @@ export class UserActionHelp {
 		user_action.save()
 	}
 
-	static new_receive_anchor_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number):void {
+	static new_receive_anchor_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.receive_anchor_reward_action, receipt, log_id)
 		let receive_anchor_reward_action = new ReceiveAnchorRewardAction(user_action.id)
 		receive_anchor_reward_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()
@@ -753,7 +788,7 @@ export class UserActionHelp {
 		user_action.save()
 	}
 
-	static new_validator_receive_anchor_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number):void {
+	static new_validator_receive_anchor_reward_action(data: JSON.Obj, receipt: near.ReceiptWithOutcome, log_id: number): void {
 		let user_action = this.new_user_action(action_types.validator_receive_anchor_reward_action, receipt, log_id)
 		let validator_receive_anchor_reward_action = new ValidatorReceiveAnchorRewardAction(user_action.id)
 		validator_receive_anchor_reward_action.consumer_chain_id = data.getString("consumer_chain_id")!.valueOf()

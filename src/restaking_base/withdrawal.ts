@@ -21,7 +21,8 @@ export class WithdrawalHelper {
 		withdrawal.staker = staker_id 
 		withdrawal.pool_id = pool_id
 		withdrawal.amount = amount
-		withdrawal.unlock_epoch = unlock_epoch
+		withdrawal.unlock_epoch = unlock_epoch.plus(BigInt.fromI32(4))
+		withdrawal.create_epoch = unlock_epoch.minus(BigInt.fromI32(4))
 		withdrawal.unlock_time = unlock_time
 		withdrawal.beneficiary = beneficiary
 		withdrawal.create_action = create_action

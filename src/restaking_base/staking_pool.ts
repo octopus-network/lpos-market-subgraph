@@ -11,6 +11,14 @@ export class StakingPoolHelper {
 		staking_pool.pool_id = pool_id
 		staking_pool.total_share_balance = BigInt.zero()
 		staking_pool.total_staked_balance = BigInt.zero()
+
+		staking_pool.unlock_epoch = BigInt.zero()
+		staking_pool.last_unstake_epoch = BigInt.zero()
+		// staking_pool.last_unstake_batch_id
+		staking_pool.current_unstake_batch_id = BigInt.zero()
+		staking_pool.batched_unstake_amount = BigInt.zero()
+		staking_pool.submitted_unstake_batches_count = 0
+
 		staking_pool.save()
 		SummaryHelper.addStakingPool(pool_id)
 	}
@@ -28,6 +36,32 @@ export class StakingPoolHelper {
 		let staking_pool = StakingPool.load(pool_id)!
 		staking_pool.total_share_balance = convertStringToBigInt(staking_pool_info.getString("total_share_balance")!.valueOf())
 		staking_pool.total_staked_balance = convertStringToBigInt(staking_pool_info.getString("total_staked_balance")!.valueOf())
+
+		if(staking_pool_info.get("unlock_epoch")) {
+		 staking_pool.unlock_epoch = BigInt.fromString(staking_pool_info.getString("unlock_epoch")!.valueOf())
+		}
+
+		if(staking_pool_info.getString("last_unstake_epoch")) {
+		 staking_pool.last_unstake_epoch = BigInt.fromString(staking_pool_info.getString("last_unstake_epoch")!.valueOf())
+		}
+
+		if(staking_pool_info.getString("last_unstake_batch_id")) {
+		
+		 staking_pool.last_unstake_batch_id = BigInt.fromString(staking_pool_info.getString("last_unstake_batch_id")!.valueOf())
+		}
+
+		if(staking_pool_info.get("current_unstake_batch_id")) {
+			staking_pool.current_unstake_batch_id = BigInt.fromString(staking_pool_info.getString("current_unstake_batch_id")!.valueOf())
+		}
+
+		if(staking_pool_info.get("batched_unstake_amount")) {
+			staking_pool.batched_unstake_amount = BigInt.fromString(staking_pool_info.getString("batched_unstake_amount")!.valueOf())
+		}
+
+		if(staking_pool_info.get("submitted_unstake_batches_count")) {
+			staking_pool.submitted_unstake_batches_count = <i32>staking_pool_info.getInteger("submitted_unstake_batches_count")!.valueOf()
+		}	
+
 		staking_pool.save()
 	}
 

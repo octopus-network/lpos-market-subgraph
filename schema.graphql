@@ -5,6 +5,14 @@ type StakingPool @entity {
   total_share_balance: BigInt!,
   total_staked_balance: BigInt!,
   stakers: [Staker!] @derivedFrom(field: "select_staking_pool")
+
+  unlock_epoch: BigInt!
+  last_unstake_epoch: BigInt
+  last_unstake_batch_id: BigInt
+  current_unstake_batch_id: BigInt
+  batched_unstake_amount: BigInt
+  submitted_unstake_batches_count: Int!
+  submitted_unstake_batch: [SubmittedUnstakeBatch!] @derivedFrom(field: "staking_pool")
 }
 
 type Staker @entity {
@@ -179,6 +187,7 @@ type Withdrawal @entity {
   pool_id: String!
   amount: BigInt!
   unlock_epoch: BigInt!
+  create_epoch: BigInt!
   unlock_time: BigInt!
   beneficiary: String!
   validator_id: String
@@ -187,12 +196,27 @@ type Withdrawal @entity {
   withdraw_action: WithdrawAction
 
   is_withdrawn: Boolean! 
+  unstake_batch_id: String
+}
+
+type SubmittedUnstakeBatch @entity {
+  id: ID!
+  unstake_batch_id: BigInt!
+  submit_unstake_epoch: BigInt!
+  total_unstake_amount: BigInt!
+  claimed_amount: BigInt!
+  is_withdrawn: Boolean!
+  submit_unstake_batch_action: SubmitUnstakeBatchAction!
+  withdraw_unstake_batch_action: WithdrawUnstakeAction
+  staking_pool: StakingPool!
 }
 
 enum ActionType {
 
   # staking pool
   ping_action,
+  withdraw_unstake_batch_action,
+  submit_unstake_batch_action,
 
   # staker
   staker_stake_action,
@@ -265,6 +289,8 @@ type UserAction @entity {
 
    # staking pool
   ping_action: PingAction,
+  withdraw_unstake_batch_action: WithdrawUnstakeBatchAction,
+  submit_unstake_batch_action: SubmitUnstakeBatchAction,
   
   #staker
   staker_stake_action: StakerStakeAction,
@@ -327,6 +353,18 @@ type PingAction @entity {
   id: ID!
   pool_id: String!
   balance: BigInt!
+}
+
+type WithdrawUnstakeBatchAction @entity {
+  id: ID!
+  pool_id: String
+  unstake_batch_id: String
+}
+
+type SubmitUnstakeBatchAction @entity {
+  id: ID!
+  pool_id: String
+  submitted_unstake_batch: SubmittedUnstakeBatch
 }
 
 type StakerStakeAction @entity {
