@@ -206,7 +206,7 @@ type SubmittedUnstakeBatch @entity {
   total_unstake_amount: BigInt!
   claimed_amount: BigInt!
   is_withdrawn: Boolean!
-  submit_unstake_batch_action: SubmitUnstakeBatchAction!
+  submit_unstake_batch_action: SubmitUnstakeBatchAction
   withdraw_unstake_batch_action: WithdrawUnstakeAction
   staking_pool: StakingPool!
 }

@@ -179,8 +179,13 @@ function handleWithdrawUnstakeBatchEvent(data: JSON.Obj, receipt: near.ReceiptWi
 
 	let user_action = UserActionHelp.new_withdraw_unstake_batch_action(data, receipt, logIndex)
 
+	let pool_id = data.getString("pool_id")
+	if(!pool_id) {
+		return
+	}
 	let unstake_batch_id = data.getString("unstake_batch_id")!.valueOf();
-	let submitted_unstake_batch = SubmittedUnstakeBatch.load(unstake_batch_id)
+	let submitted_unstake_batch_id = SubmittedUnstakeBatchHelper.unstake_batch_id(pool_id.valueOf(), unstake_batch_id);
+	let submitted_unstake_batch = SubmittedUnstakeBatch.load(submitted_unstake_batch_id)
 
 	if (submitted_unstake_batch) {
 		submitted_unstake_batch.is_withdrawn = true
@@ -197,6 +202,19 @@ function handleSubmitUnstakeBatchEvent(data: JSON.Obj, receipt: near.ReceiptWith
 		let submitted_unstake_batch = SubmittedUnstakeBatchHelper.newFromJsonData(data.getObj("submitted_unstake_batch")!, pool_id)
 		let user_action = UserActionHelp.new_submit_unstake_batch_action(
 			pool_id,
+			submitted_unstake_batch.id,
+			receipt,
+			logIndex
+		)
+		submitted_unstake_batch.submit_unstake_batch_action = user_action.id
+		submitted_unstake_batch.save()
+	} else if (data.get("staking_pool") && data.get("submitted_unstake_batch")) {
+		let staking_pool = StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool")!);
+
+		let submitted_unstake_batch = SubmittedUnstakeBatchHelper.newFromJsonData(data.getObj("submitted_unstake_batch")!, staking_pool.pool_id)
+
+		let user_action = UserActionHelp.new_submit_unstake_batch_action(
+			staking_pool.pool_id,
 			submitted_unstake_batch.id,
 			receipt,
 			logIndex

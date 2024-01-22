@@ -31,7 +31,7 @@ export class StakingPoolHelper {
 		pool.save()
 	}
 
-	static updateByStakingPoolInfoJsonObj(staking_pool_info: JSON.Obj): void {
+	static updateByStakingPoolInfoJsonObj(staking_pool_info: JSON.Obj): StakingPool {
 		let pool_id = staking_pool_info.getString("pool_id")!.valueOf()
 		let staking_pool = StakingPool.load(pool_id)!
 		staking_pool.total_share_balance = convertStringToBigInt(staking_pool_info.getString("total_share_balance")!.valueOf())
@@ -63,6 +63,7 @@ export class StakingPoolHelper {
 		}	
 
 		staking_pool.save()
+		return staking_pool
 	}
 
 }

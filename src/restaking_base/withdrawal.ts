@@ -1,7 +1,8 @@
 import { JSON } from "assemblyscript-json";
-import { DecreaseDelegationAction, DecreaseStakeAction, UndelegateAction, UserAction, Withdrawal } from "../../generated/schema";
+import { DecreaseDelegationAction, DecreaseStakeAction, SubmittedUnstakeBatch, UndelegateAction, UserAction, Withdrawal } from "../../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { action_types } from "../user_action";
+import { SubmittedUnstakeBatchHelper } from "./unstake_batch";
 
 export class WithdrawalHelper {
 	public static new(
@@ -19,7 +20,7 @@ export class WithdrawalHelper {
 
 		let withdrawal = new Withdrawal(withdraw_certificate)
 		withdrawal.withdrawal_certificate = withdraw_certificate
-		withdrawal.staker = staker_id 
+		withdrawal.staker = staker_id
 		withdrawal.pool_id = pool_id
 		withdrawal.amount = amount
 		withdrawal.unlock_epoch = unlock_epoch.plus(BigInt.fromI32(4))
@@ -44,7 +45,7 @@ export class WithdrawalHelper {
 			BigInt.fromString(data.getString("unlock_time")!.valueOf()),
 			data.getString("beneficiary")!.valueOf(),
 			create_action,
-			data.getString("unstake_batch_id")?data.getString("unstake_batch_id")!.valueOf():null
+			data.getString("unstake_batch_id") ? data.getString("unstake_batch_id")!.valueOf() : null
 		)
 	}
 
@@ -56,5 +57,15 @@ export class WithdrawalHelper {
 		withdrawal.is_withdrawn = true
 		withdrawal.withdraw_action = withdraw_action
 		withdrawal.save()
+
+		if (withdrawal.unstake_batch_id) {
+			let submitted_unstake_batch_id = SubmittedUnstakeBatchHelper.unstake_batch_id(withdrawal.pool_id, withdrawal.unstake_batch_id!)
+
+			let submitted_unstake_batch = SubmittedUnstakeBatch.load(submitted_unstake_batch_id)
+			if (submitted_unstake_batch) {
+				submitted_unstake_batch.claimed_amount = submitted_unstake_batch.claimed_amount.plus(withdrawal.amount)
+				submitted_unstake_batch.save()
+			}
+		}
 	}
 }

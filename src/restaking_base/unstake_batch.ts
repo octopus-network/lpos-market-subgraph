@@ -14,9 +14,10 @@ export class SubmittedUnstakeBatchHelper {
 		let submit_unstake_epoch = BigInt.fromString(obj.getString("submit_unstake_epoch")!.valueOf())
 		let total_unstake_amount = BigInt.fromString(obj.getString("total_unstake_amount")!.valueOf())
 		let claimed_amount = BigInt.fromString(obj.getString("claimed_amount")!.valueOf())
-		let is_withdrawn = obj.getString("is_withdrawn")!.valueOf() =="true"?true: false
+		let is_withdrawn = obj.getBool("is_withdrawn")!.toString() == "true" ?true: false
 
 		let submit_unstake_batch = new SubmittedUnstakeBatch(this.unstake_batch_id(staking_pool_id, unstake_batch_id));
+		submit_unstake_batch.unstake_batch_id = BigInt.fromString(unstake_batch_id)
 		submit_unstake_batch.submit_unstake_epoch = submit_unstake_epoch
 		submit_unstake_batch.total_unstake_amount = total_unstake_amount
 		submit_unstake_batch.claimed_amount = claimed_amount
