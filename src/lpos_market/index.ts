@@ -101,9 +101,7 @@ function handleStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logI
 	let validator = ValidatorHelper.stake(data.getObj("validator_info")!)
 	UserActionHelp.new_stake_action(data, receipt, logIndex, validator.validator_id)
 
-	let summary = SummaryHelper.getOrNew()
-	summary.validator_count += 1
-	summary.save()
+	SummaryHelper.stake(validator.validator_id);
 }
 
 /**
@@ -141,9 +139,7 @@ function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, lo
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
 	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator_id);
 
-	let summary = SummaryHelper.getOrNew()
-	summary.validator_count -= 1
-	summary.save()
+	SummaryHelper.unstake(validator_id)
 }
 
 function handleWithdrawInUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
