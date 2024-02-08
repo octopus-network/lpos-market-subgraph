@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { StakingPool, Summary } from "../generated/schema";
+import { StakingPool, Summary, Validator } from "../generated/schema";
 
 export const SummaryId = "summary"
 
@@ -13,6 +13,7 @@ export class SummaryHelper {
 		summary.all_validator_count = 0
 		summary.delegator_count = 0
 		summary.staking_pool_list = ""
+		summary.staking_validator_list = ""
 		summary.total_staked_near = BigInt.zero()
 		return summary
 	}
@@ -28,15 +29,37 @@ export class SummaryHelper {
 		summary.save()
 		return summary
 	}
+	
+	public static stake(validator_id: string): void {
+		let summary = this.getOrNew()
+		summary.staking_validator_list = summary.staking_validator_list + "," + validator_id
+		summary.validator_count+=1
+		summary.save()
+	}
+
+	public static unstake(validator_id: string): void {
+		let summary = this.getOrNew()
+		let staking_validators = summary.staking_validator_list.split(",").filter(e=>e!="")
+		let new_staking_validators: Array<string> = []
+		for(let i =0 ;i<staking_validators.length;i++) {
+			if(staking_validators[i] != validator_id) {
+			new_staking_validators.push(staking_validators[i])
+			}
+		}
+		summary.staking_validator_list = new_staking_validators.join(",")
+		summary.validator_count -= 1
+		summary.save()
+
+	}
 
 	public static updateTotalStake(): Summary {
 		let summary = this.getOrNew()
-		let staking_pools = summary.staking_pool_list.split(",").filter(e=>e!="")
+		let staking_validators = summary.staking_validator_list.split(",").filter(e=>e!="")
 		let total_staked_near = BigInt.zero()
-		if (staking_pools) {
-			for (let i = 0; i < staking_pools.length; i++) {
-				let staking_pool = StakingPool.load(staking_pools[i])!
-				total_staked_near = total_staked_near.plus(staking_pool.total_staked_balance)
+		if (staking_validators) {
+			for (let i = 0; i < staking_validators.length; i++) {
+				let validator = Validator.load(staking_validators[i])!
+				total_staked_near = total_staked_near.plus(validator.total_staked_balance)
 			}
 		}
 		summary.total_staked_near = total_staked_near

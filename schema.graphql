@@ -176,6 +176,7 @@ type Summary @entity {
   delegator_count: Int!
   total_staked_near: BigInt!
   staking_pool_list: String!
+  staking_validator_list: String!
 }
 
 type Withdrawal @entity {
