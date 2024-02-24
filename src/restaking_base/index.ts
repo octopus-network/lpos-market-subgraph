@@ -63,7 +63,6 @@ function handlePingEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 	// StakerHelper.upda
 	StakingPoolHelper.updateByPing(data)
 	UserActionHelp.new_ping_action(data, receipt, logIndex)
-	SummaryHelper.updateTotalStake()
 }
 
 function handleStakerStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -79,7 +78,6 @@ function handleIncreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 	StakingPoolHelper.updateByStakingPoolInfoJsonObj(data.getObj("staking_pool_info")!)
 	StakerHelper.newOrUpdateByStakerInfo(data.getObj("staker_info")!)
 	UserActionHelp.new_staker_increase_stake_action(data, receipt, logIndex)
-	SummaryHelper.updateTotalStake()
 }
 
 function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {
@@ -91,7 +89,6 @@ function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 		staker.staker_id,
 		user_action.id
 	)
-	SummaryHelper.updateTotalStake()
 }
 
 function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number, version: string): void {

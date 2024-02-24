@@ -68,6 +68,7 @@ function handlePingEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIn
 		BigInt.fromString(data.getString("new_total_staked_balance")!.valueOf())
 	)
 	UserActionHelp.new_validator_ping_action(data, receipt, logIndex)
+	SummaryHelper.updateTotalStake()
 }
 
 /**
@@ -102,6 +103,8 @@ function handleStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logI
 	UserActionHelp.new_stake_action(data, receipt, logIndex, validator.validator_id)
 
 	SummaryHelper.stake(validator.validator_id);
+	SummaryHelper.updateTotalStake()
+
 }
 
 /**
@@ -117,6 +120,7 @@ function handleStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logI
 function handleIncreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
 	UserActionHelp.new_increase_stake_action(data, receipt, logIndex, validator.validator_id)
+	SummaryHelper.updateTotalStake()
 }
 
 /**
@@ -132,6 +136,7 @@ function handleIncreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutco
 function handleDecreaseStakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
 	UserActionHelp.new_decrease_stake_action(data, receipt, logIndex, validator.validator_id)
+	SummaryHelper.updateTotalStake()
 }
 
 function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -140,6 +145,7 @@ function handleUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, lo
 	UserActionHelp.new_unstake_action(data, receipt, logIndex, validator_id);
 
 	SummaryHelper.unstake(validator_id)
+	SummaryHelper.updateTotalStake()
 }
 
 function handleWithdrawInUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -173,18 +179,23 @@ function handleDelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, l
 	let summary = SummaryHelper.getOrNew()
 	summary.delegator_count += 1
 	summary.save()
+
+	SummaryHelper.updateTotalStake()
 }
 
 function handleIncreaseDelegationEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
 	let delegator = DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
 	UserActionHelp.new_increase_delegation_action(data, receipt, logIndex, validator.validator_id, delegator)
+
+	SummaryHelper.updateTotalStake()
 }
 
 function handleDecreaseDelegationEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
 	let validator = ValidatorHelper.newOrUpdateByValidatorInfo(data.getObj("validator_info")!)
 	let delegator = DelegatorHelper.newOrUpdateByDelegatorInfo(data.getObj("delegator_info")!)
 	UserActionHelp.new_decrease_delegation_action(data, receipt, logIndex, validator.validator_id, delegator)
+	SummaryHelper.updateTotalStake()
 }
 
 function handleUndelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
@@ -199,6 +210,7 @@ function handleUndelegateEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome,
 	let summary = SummaryHelper.getOrNew()
 	summary.delegator_count -= 1
 	summary.save()
+	SummaryHelper.updateTotalStake()
 }
 
 function handleUndelegateInUnstakeEvent(data: JSON.Obj, receipt: near.ReceiptWithOutcome, logIndex: number): void {
